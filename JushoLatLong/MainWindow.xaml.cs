@@ -8,6 +8,8 @@ using CsvHelper;
 using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System;
 
 namespace JushoLatLong {
 
@@ -30,6 +32,10 @@ namespace JushoLatLong {
         string selectedFileName = "";
         string outputFolder = "";
         string defaultOutputFolder = @"C:\CSV_Exported";
+
+        // to hold found & missing addresses
+        List<CompanyProfile> profilesWithCoordinate = null;
+        List<CompanyProfile> profilesWithMissingAddress = null;
 
         private void SetDefaultOutputFolder() {
             // set default location
@@ -78,9 +84,14 @@ namespace JushoLatLong {
         private void OnClickGetMapCoordinate(object sender, RoutedEventArgs e) {
 
             if (File.Exists(selectedFileName) == true) {
+                // check that file is not locked (used by other programs i.e. excel)
 
                 CreateOutputDataList(this, selectedFileName);
             }
+        }
+
+        void Dlog(string tag, string msg) {
+            Debug.WriteLine($"Logging from: {tag} => {msg}");
         }
 
         void UpdateStatus(string text) {
@@ -107,7 +118,7 @@ namespace JushoLatLong {
 
                 csv.Read();             // skip header (1st line)
 
-                await Task.Run(() => {
+                await Task.Run(async () => {
                     var rowCounter = 0;
                     var progress = "Reading csv file, please wait";
                     var dotCounter = 0;
@@ -115,7 +126,9 @@ namespace JushoLatLong {
                     while (csv.Read()) {
 
                         var profile = csv.GetRecord<CompanyProfile>();
-                        Debug.WriteLine(profile.Address);
+                        Dlog("CreateOutputDataList", profile.Address);
+
+                        var coordinate = await GetCoordinate(profile.Address);
 
                         ++rowCounter;
                         if (rowCounter % 1000 == 0) {
@@ -145,5 +158,12 @@ namespace JushoLatLong {
             }
         }
 
+        async Task<Coordinate> GetCoordinate(string address) {
+
+            // if you don't understand this code, you should't modify it
+            return await Task.Run(new Func<Task<Coordinate>>(() => {
+                return null;
+            }));
+        }
     }
 }

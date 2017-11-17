@@ -74,6 +74,7 @@
     <Compile Include="Controller\CsvController.cs" />
     <Compile Include="Controller\ICsvController.cs" />
     <Compile Include="Model\Domain\CompanyProfile.cs" />
+    <Compile Include="Model\Domain\Coordinate.cs" />
     <Compile Include="Utils\FileUtil.cs" />
     <Compile Include="Utils\IFileUtil.cs" />
     <Compile Include="MainWindow.xaml.cs">
