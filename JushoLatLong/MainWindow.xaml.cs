@@ -38,15 +38,35 @@ namespace JushoLatLong {
         // to hold found & missing addresses
         List<CompanyProfile> profilesWithCoordinate = null;
         List<CompanyProfile> profilesWithMissingAddress = null;
+        CompanyProfile headers = null;
 
         public MainWindow() {
             InitializeComponent();
+
+            Init();
+        }
+
+        private void Init() {
 
             fileUtil = new FileUtil();
             SetDefaultOutputFolder();
 
             profilesWithCoordinate = new List<CompanyProfile>();
             profilesWithMissingAddress = new List<CompanyProfile>();
+
+            headers = new CompanyProfile {
+                CompanyCode = "会社コード",
+                PrefecturesName = "都道府県名",
+                CityName = "市区町村名",
+                Address = "以下住所",
+                Remarks = "備考",
+                Registrant = "登録者",
+                RegistrationDate = "登録日",
+                Apo = "APO",
+                RecordNumber = "レコード番号",
+                Latitude = "緯度",
+                Longitude = "経度"
+            };
         }
 
         private void OnClickBrowseFileBtn(object sender, RoutedEventArgs e) {
@@ -87,7 +107,9 @@ namespace JushoLatLong {
                 // write to file
                 UpdateStatus("Writing csv... ...");
                 if (isDataReady) {
-                    var isWritingDone = await WriteDataToCsv(outputFolder);
+
+                    var isWritingDone = await WriteDataToCsvAsync(outputFolder);
+
                     if (isWritingDone) {
                         UpdateStatus("All done!");
                     }
@@ -125,7 +147,6 @@ namespace JushoLatLong {
                         mapPoint = locationService.GetLatLongFromAddress(address);
                         if (mapPoint != null && mapPoint.Latitude != 0.0 && mapPoint.Longitude != 0.0) {
 
-                            profile.CoordinateFlag = "1";
                             profile.Latitude = mapPoint.Latitude.ToString();
                             profile.Longitude = mapPoint.Longitude.ToString();
 
@@ -159,34 +180,30 @@ namespace JushoLatLong {
             }
         }
 
-        private async Task<bool> WriteDataToCsv(string outputFolder) {
+        private async Task<bool> WriteDataToCsvAsync(string outputFolder) {
+
             validAddressCsvFile = $"{outputFolder}\\valid_address_with_coordinate.csv";
             missingAdressCsvFIle = $"{outputFolder}\\missing_address.csv";
 
             await Task.Run(() => {
 
-                if (File.Exists(validAddressCsvFile) == true) {
-                    using (var csvWriter = new CsvWriter(new StreamWriter(validAddressCsvFile))) {
-                        csvWriter.WriteRecords(profilesWithCoordinate);
-                    }
-                } else {
-                    using (var csvWriter = new CsvWriter(new StreamWriter(File.Create(validAddressCsvFile)))) {
-                        csvWriter.WriteRecords(profilesWithCoordinate);
-                    }
+                // valid addresses
+                using (var csvWriter = new CsvWriter(new StreamWriter(File.OpenWrite(validAddressCsvFile)))) {
+                    csvWriter.WriteRecord<CompanyProfile>(headers);
+                    csvWriter.NextRecord();
+                    csvWriter.WriteRecords(profilesWithCoordinate);
                 }
 
-
-                if (File.Exists(missingAdressCsvFIle) == true) {
-                    using (var csvWriter = new CsvWriter(new StreamWriter(missingAdressCsvFIle))) {
-                        csvWriter.WriteRecords(profilesWithMissingAddress);
-                    }
-                } else {
-                    using (var csvWriter = new CsvWriter(new StreamWriter(File.Create(missingAdressCsvFIle)))) {
-                        csvWriter.WriteRecords(profilesWithMissingAddress);
-                    }
+                // missing addresses
+                using (var csvWriter = new CsvWriter(new StreamWriter(File.OpenWrite(missingAdressCsvFIle)))) {
+                    csvWriter.WriteRecord<CompanyProfile>(headers);
+                    csvWriter.NextRecord();
+                    csvWriter.WriteRecords(profilesWithMissingAddress);
                 }
 
             });
+
+            await Task.Delay(2000);
 
             return true;
         }
