@@ -19,9 +19,9 @@ namespace JushoLatLong.Model.Domain {
         public string RecordNumber { get; set; }
 
         // added fields
-        bool IsFound { get; set; } = false;
-        double Latitude { get; set; } = 0.0;
-        double Longitude { get; set; } = 0.0;
+        public string CoordinateFlag { get; set; } = "0";
+        public string Latitude { get; set; } = "0.0";
+        public string Longitude { get; set; } = "0.0";
 
     }
 }
