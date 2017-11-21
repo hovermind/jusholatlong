@@ -10,5 +10,6 @@ namespace JushoLatLong.Utils
     {
         string GetSelectedFile(string fileType);
         string GetOutputFolder();
+        bool IsFileLocked(string fileName);
     }
 }

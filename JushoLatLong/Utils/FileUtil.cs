@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using System.IO;
 
 namespace JushoLatLong.Utils
 {
@@ -48,6 +49,20 @@ namespace JushoLatLong.Utils
 
             // did not select folder
             return "";
+        }
+
+        public bool IsFileLocked(string fileName) {
+
+            try {
+
+                var fs = File.Open(fileName, FileMode.Open);
+                fs.Close();
+
+                return false;
+
+            } catch (IOException ex) {
+                return true;
+            }
         }
     }
 }

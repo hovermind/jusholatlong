@@ -29,7 +29,6 @@ namespace JushoLatLong {
 
     public partial class MainWindow : Window {
         IFileUtil fileUtil = null;
-        CancellationToken apiCallCancelToken;
         CancellationTokenSource cancellationTokenSource = null;
 
         string selectedFileName = "";
@@ -110,36 +109,43 @@ namespace JushoLatLong {
 
             // check file exists
             if (File.Exists(selectedFileName) == true) {
+
                 // check that file is not locked (used by other programs i.e. excel)
+                if (fileUtil.IsFileLocked(selectedFileName)) {
 
-                DisableGetLatLongBtn(); // also enables btn_stop_api_call
-
-                var isDataReady = await CreateOutputDataListAsync(this, selectedFileName);
-
-                if (!cancellationTokenSource.IsCancellationRequested) {
-
-                    ExportDataToCsv(isDataReady);
+                    // file is locked
+                    UpdateStatus("File is locked, please close it & try again!");
 
                 } else {
 
-                    var dialogResult = MessageBox.Show(caption: "API call cancelled",
-                                                       messageBoxText: "Would you like to write data to csv?",
-                                                       button: MessageBoxButton.YesNo
-                                                  );
+                    DisableGetLatLongBtn(); // also enables btn_stop_api_call
 
-                    if (dialogResult == MessageBoxResult.Yes) {
-                        ExportDataToCsv(true);
-                    } else if (dialogResult == MessageBoxResult.No) {
-                        EnableGetLatLongBtn(); // also disables btn_stop_api_call
-                        ResetDataList();
-                        ResetGuiTxt();
-                        UpdateStatus("API call cancelled!");
+                    var isDataReady = await CreateOutputDataListAsync(this, selectedFileName);
+
+                    if (!cancellationTokenSource.IsCancellationRequested) {
+
+                        ExportDataToCsv(isDataReady);
+
+                    } else {
+
+                        var dialogResult = MessageBox.Show(caption: "API call cancelled",
+                                                           messageBoxText: "Would you like to write data to csv?",
+                                                           button: MessageBoxButton.YesNo
+                                                      );
+
+                        if (dialogResult == MessageBoxResult.Yes) {
+                            ExportDataToCsv(true);
+                        } else if (dialogResult == MessageBoxResult.No) {
+                            EnableGetLatLongBtn(); // also disables btn_stop_api_call
+                            ResetDataList();
+                            ResetGuiTxt();
+                            UpdateStatus("API call cancelled!");
+                        }
                     }
                 }
-
             } else {
                 // file does not exist
-                UpdateStatus("File does not exist, please seect again!");
+                UpdateStatus("File does not exist, please select again!");
             }
         }
 
@@ -224,6 +230,8 @@ namespace JushoLatLong {
 
                 // write to file
                 UpdateStatus("Writing csv  . . .    . . .");
+                await Task.Delay(1500);
+
                 var isWritingDone = await WriteDataToCsvAsync(outputFolder);
 
                 if (isWritingDone) {
