@@ -5,13 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:JushoLatLong"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        WindowStyle="ThreeDBorderWindow"
+        Title="Jusho Latitude Longitude" Height="350" Width="525"
+        Icon="pack://application:,,,/Icon/icon_location.png">
     <Grid>
-        <TextBox x:Name="tb_file_name" HorizontalAlignment="Left" Height="30" Margin="87,20,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="304" VerticalContentAlignment="Center" AutomationProperties.HelpText="csv file location" SpellCheck.IsEnabled="True" Text="Select File"/>
+        <TextBox x:Name="tb_file_name" HorizontalAlignment="Left" Height="30" Margin="87,20,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="304" VerticalContentAlignment="Center" AutomationProperties.HelpText="csv file location" SpellCheck.IsEnabled="True" TextChanged="OnFileNameTextChanged"/>
         <Button x:Name="btn_browse_file" Content="Browse" HorizontalAlignment="Left" Margin="396,20,0,0" VerticalAlignment="Top" Width="92" Height="30" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" ScrollViewer.CanContentScroll="True" Click="OnClickBrowseFileBtn" FontSize="14"/>
         <Label x:Name="label_file" Content="File :" HorizontalAlignment="Left" Margin="10,20,0,0" VerticalAlignment="Top" Width="72" Height="30" FontWeight="Bold" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" FontSize="14"/>
-        <Button x:Name="btn_get_map_coordinate" Content="Get Latitude, Longitude ( 「 緯度、経度 」 を 取得  )" HorizontalAlignment="Left" Height="35" Margin="87,113,0,0" VerticalAlignment="Top" Width="304" Click="OnClickGetMapCoordinate" FontWeight="Bold" IsEnabled="False"/>
-        <TextBox x:Name="tb_output_folder" HorizontalAlignment="Left" Height="30" Margin="87,55,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="304" VerticalContentAlignment="Center" AutomationProperties.HelpText="csv file location" SpellCheck.IsEnabled="True" Text="Select Output Folder"/>
+        <Button x:Name="btn_get_map_coordinate" Content="Get Latitude, Longitude ( 「 緯度、経度 」 を 取得  )" HorizontalAlignment="Left" Height="35" Margin="87,148,0,0" VerticalAlignment="Top" Width="304" Click="OnClickGetMapCoordinate" FontWeight="Bold" IsEnabled="False"/>
+        <TextBox x:Name="tb_output_folder" HorizontalAlignment="Left" Height="30" Margin="87,55,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="304" VerticalContentAlignment="Center" AutomationProperties.HelpText="csv file location" SpellCheck.IsEnabled="True"/>
         <Button x:Name="btn_browse_output_folder" Content="Browse" HorizontalAlignment="Left" Margin="396,55,0,0" VerticalAlignment="Top" Width="92" Height="30" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" ScrollViewer.CanContentScroll="True" FontSize="14" Click="OnClickBrowseFolderBtn"/>
         <Label x:Name="label_file_Copy" Content="Output :" HorizontalAlignment="Left" Margin="10,55,0,0" VerticalAlignment="Top" Width="72" Height="30" FontWeight="Bold" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" FontSize="14"/>
         <Label Content="Status :" HorizontalAlignment="Left" Margin="69,202,0,0" VerticalAlignment="Top" Width="63" Height="30" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
@@ -20,7 +22,9 @@
         <Label Content="Error :" HorizontalAlignment="Left" Margin="69,275,0,0" VerticalAlignment="Top" Width="63" Height="30" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
         <Label x:Name="label_success_count" Content="0" HorizontalAlignment="Left" Margin="137,238,0,0" VerticalAlignment="Top" Width="351" VerticalContentAlignment="Center" Height="30"/>
         <Label x:Name="label_error_count" Content="0" HorizontalAlignment="Left" Margin="137,275,0,0" VerticalAlignment="Top" Width="351" Height="30" VerticalContentAlignment="Center"/>
-        <Button x:Name="btn_stop_api_call" Content="Stop API Call" HorizontalAlignment="Left" Margin="396,113,0,0" VerticalAlignment="Top" Width="92" Height="35" Background="#FFF70606" Foreground="#FFF9F5F5" FontWeight="Bold" IsEnabled="False" Click="OnClickStopApiCallBtn"/>
+        <Button x:Name="btn_stop_api_call" Content="Stop API Call" HorizontalAlignment="Left" Margin="396,148,0,0" VerticalAlignment="Top" Width="92" Height="35"  FontWeight="Bold" IsEnabled="False" Click="OnClickStopApiCallBtn" OpacityMask="Black"/>
+        <TextBox x:Name="tb_map_api_key" HorizontalAlignment="Left" Height="32" Margin="87,91,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="304" VerticalContentAlignment="Center"/>
+        <Label x:Name="label_file_Copy1" Content="API Key :" HorizontalAlignment="Left" Margin="10,90,0,0" VerticalAlignment="Top" Width="72" Height="30" FontWeight="Bold" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" FontSize="14"/>
 
     </Grid>
 </Window>

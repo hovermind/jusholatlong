@@ -118,5 +118,8 @@
   <ItemGroup>
     <Resource Include="GoogleMaps.LocationServices.readme.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icon\icon_location.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

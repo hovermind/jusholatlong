@@ -12,6 +12,8 @@ using System.Collections.Generic;
 using System;
 using GoogleMaps.LocationServices;
 using System.Threading;
+using System.Windows.Controls;
+using System.Net;
 
 namespace JushoLatLong {
 
@@ -29,7 +31,12 @@ namespace JushoLatLong {
 
     public partial class MainWindow : Window {
         IFileUtil fileUtil = null;
+        bool isFileBrowserLaunched = false;
+        bool isApiKeyOrQueryLimitException = false;
+
         CancellationTokenSource cancellationTokenSource = null;
+        string mapApiKey = "";
+        string nonceAddress = "UDFGUWEF78R7YT 8924512";
 
         string selectedFileName = "";
         string outputFolder = "";
@@ -71,24 +78,28 @@ namespace JushoLatLong {
         }
 
         private void OnClickBrowseFileBtn(object sender, RoutedEventArgs e) {
+            isFileBrowserLaunched = true;
+            ResetGuiTxt();
 
             // get selected file name
             selectedFileName = fileUtil?.GetSelectedFile("csv");
 
             // set selected file name to textbox
-            if (!"".Equals(selectedFileName)) {
+            if (String.IsNullOrEmpty(selectedFileName)) {
 
-                tb_file_name.Text = selectedFileName;
+                tb_file_name.Text = "";
+                // disable btn_get_map_cordinate
+                DisableGetLatLongBtn();
 
-                // enable btn_get_map_cordinate
-                EnableGetLatLongBtn();
+                UpdateStatus("Please select csv file");
 
             } else {
 
-                tb_file_name.Text = "please choose a valid file!";
+                tb_file_name.Text = selectedFileName;
+                // enable btn_get_map_cordinate
+                EnableGetLatLongBtn();
 
-                // disable btn_get_map_cordinate
-                DisableGetLatLongBtn();
+                UpdateStatus("");
             }
 
         }
@@ -107,24 +118,68 @@ namespace JushoLatLong {
             // reset gui txt
             ResetGuiTxt();
 
-            // check file exists
-            if (File.Exists(selectedFileName) == true) {
+            // check map api key
+            var givenMapApiKey = tb_map_api_key.Text;
+            if (String.IsNullOrEmpty(givenMapApiKey)) {
 
-                // check that file is not locked (used by other programs i.e. excel)
+                var dialogResult = MessageBox.Show(caption: "Google Map API Key",
+                                                   messageBoxText: "You must provide Google Map API Key.",
+                                                   button: MessageBoxButton.OK
+                                              );
+                return;
+
+            } else {
+                mapApiKey = givenMapApiKey;
+            }
+
+            // check file exists
+            if (File.Exists(selectedFileName) == false) {
+
+                // file does not exist
+                UpdateStatus("File does not exist, please select again!");
+
+                DisableGetLatLongBtn();
+                return;
+
+            } else {
+
+                // check that file is not locked (used by other programs i.e. Excel)
                 if (fileUtil.IsFileLocked(selectedFileName)) {
 
                     // file is locked
                     UpdateStatus("File is locked, please close it & try again!");
 
+                    DisableGetLatLongBtn();
+                    return;
+
                 } else {
 
-                    DisableGetLatLongBtn(); // also enables btn_stop_api_call
+                    DisableGetLatLongBtn();
+                    EnableStopApiCallBtn();
 
+                    // prepare data lists
                     var isDataReady = await CreateOutputDataListAsync(this, selectedFileName);
 
                     if (!cancellationTokenSource.IsCancellationRequested) {
 
-                        ExportDataToCsv(isDataReady);
+                        if (isApiKeyOrQueryLimitException) {
+
+                            isApiKeyOrQueryLimitException = false;
+
+                            var dialogResult = MessageBox.Show(caption: "Exception!",
+                                                               messageBoxText: "Wrong map API key or query limit exceeded!",
+                                                               button: MessageBoxButton.OK
+                                                          );
+                            EnableGetLatLongBtn();
+                            DisableStopApiCallBtn();
+
+                            return;
+
+                        } else {
+
+                            // export data to csv
+                            ExportDataToCsv(isDataReady);
+                        }
 
                     } else {
 
@@ -134,18 +189,21 @@ namespace JushoLatLong {
                                                       );
 
                         if (dialogResult == MessageBoxResult.Yes) {
+
                             ExportDataToCsv(true);
+
                         } else if (dialogResult == MessageBoxResult.No) {
-                            EnableGetLatLongBtn(); // also disables btn_stop_api_call
-                            ResetDataList();
+
                             ResetGuiTxt();
                             UpdateStatus("API call cancelled!");
+
+                            ResetDataList();
+
+                            EnableGetLatLongBtn();
+                            DisableStopApiCallBtn();
                         }
                     }
                 }
-            } else {
-                // file does not exist
-                UpdateStatus("File does not exist, please select again!");
             }
         }
 
@@ -173,7 +231,7 @@ namespace JushoLatLong {
                     var successCounter = 0;
                     var errorCounter = 0;
 
-                    var locationService = new GoogleLocationService();
+                    var locationService = new GoogleLocationService(mapApiKey);
                     MapPoint mapPoint = null;
 
                     csvReader.Read();             // skip header (1st line)
@@ -186,37 +244,45 @@ namespace JushoLatLong {
                         }
 
                         var profile = csvReader.GetRecord<CompanyProfile>();
-                        var address = String.IsNullOrEmpty(profile.Address) ? "xbsjhUDFGUWEF78R7YT 8924512 FHGSDFG7" : profile.Address;
-                        gui.UpdateStatus($"Getting Latitude, Longitude  . . .    . . .");
+                        var address = String.IsNullOrEmpty(profile.Address) ? nonceAddress : profile.Address;
 
-                        //Thread.Sleep(1000);
-                        await Task.Delay(1500);
+                        try {
 
-                        mapPoint = locationService.GetLatLongFromAddress(address);
-                        if (mapPoint != null && mapPoint.Latitude != 0.0 && mapPoint.Longitude != 0.0) {
+                            mapPoint = locationService.GetLatLongFromAddress(address);
+                            if (mapPoint != null && mapPoint.Latitude != 0.0 && mapPoint.Longitude != 0.0) {
 
-                            profile.Latitude = mapPoint.Latitude.ToString();
-                            profile.Longitude = mapPoint.Longitude.ToString();
+                                profile.Latitude = mapPoint.Latitude.ToString();
+                                profile.Longitude = mapPoint.Longitude.ToString();
 
-                            // add to valid address list
-                            profilesWithCoordinate.Add(profile);
+                                // add to valid address list
+                                profilesWithCoordinate.Add(profile);
+
+                                // update gui
+                                gui.UpdateStatus($"{profile.Latitude} , {profile.Longitude} [  {address}  ]");
+                                gui.UpdateSuccess($"{++successCounter}");
+
+                            } else {
+
+                                // add to missing address list
+                                profilesWithMissingAddress.Add(profile);
+
+                                // update gui
+                                gui.UpdateStatus("Not found");
+                                gui.UpdateError($"{++errorCounter}");
+                            }
+
+                            //Thread.Sleep(1000);
+                            await Task.Delay(1000);
+
+                        } catch (WebException ex) {
+
+                            isApiKeyOrQueryLimitException = true;
 
                             // update gui
-                            gui.UpdateStatus($"{profile.Latitude} , {profile.Longitude} [  {address}  ]");
-                            gui.UpdateSuccess($"{++successCounter}");
+                            UpdateStatus($"[ ERROR: {ex.Message} ]");
 
-                        } else {
-
-                            // add to missing address list
-                            profilesWithMissingAddress.Add(profile);
-
-                            // update gui
-                            gui.UpdateStatus("Not found");
-                            gui.UpdateError($"{++errorCounter}");
+                            break;
                         }
-
-                        //Thread.Sleep(1000);
-                        await Task.Delay(1500);
                     }
                 });
 
@@ -227,17 +293,18 @@ namespace JushoLatLong {
         private async void ExportDataToCsv(bool isDataReady) {
 
             if (isDataReady) {
+                DisableApiCallLatLongBtns();
 
-                // write to file
+                // write data to csv file
                 UpdateStatus("Writing csv  . . .    . . .");
                 await Task.Delay(1500);
 
                 var isWritingDone = await WriteDataToCsvAsync(outputFolder);
 
                 if (isWritingDone) {
-                    ResetGuiTxt();
+                    //ResetGuiTxt();
                     UpdateStatus("All done!");
-                    EnableGetLatLongBtn(); // also disables btn_stop_api_call
+                    EnableGetLatLongBtn();
                 }
             }
         }
@@ -315,16 +382,47 @@ namespace JushoLatLong {
 
         private void EnableGetLatLongBtn() {
             btn_get_map_coordinate.IsEnabled = true;
-            btn_stop_api_call.IsEnabled = false;
         }
 
         private void DisableGetLatLongBtn() {
             btn_get_map_coordinate.IsEnabled = false;
+        }
+
+        private void DisableStopApiCallBtn() {
+            btn_stop_api_call.IsEnabled = false;
+        }
+
+        private void EnableStopApiCallBtn() {
             btn_stop_api_call.IsEnabled = true;
+        }
+
+        private void DisableApiCallLatLongBtns() {
+            DisableGetLatLongBtn();
+            DisableStopApiCallBtn();
         }
 
         private void Dlog(string tag, string msg) {
             Debug.WriteLine($"Logging from: {tag} => {msg}");
+        }
+
+        private void OnFileNameTextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) {
+            
+            // do not listen if file browser launched
+            if (isFileBrowserLaunched) {
+                isFileBrowserLaunched = false;
+                return;
+            }
+
+            var strFileName = (sender as TextBox)?.Text;
+
+            if (File.Exists(strFileName)) {
+                selectedFileName = strFileName;
+                UpdateStatus("");
+                EnableGetLatLongBtn();
+            } else {
+                UpdateStatus("File does not exist! Please select valid file");
+                DisableGetLatLongBtn();
+            }
         }
     }
 }
