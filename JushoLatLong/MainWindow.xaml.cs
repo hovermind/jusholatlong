@@ -17,19 +17,8 @@ using System.Net;
 
 namespace JushoLatLong {
 
-    public enum ProfileHeader : int {
-        CompanyCode = 0,
-        PrefecturesName = 1,
-        CityName = 2,
-        Address = 3,
-        Remarks = 4,
-        Registrant = 5,
-        RegistrationDate = 6,
-        Apo = 7,
-        RecordNumber = 8
-    }
-
     public partial class MainWindow : Window {
+
         IFileUtil fileUtil = null;
         bool isFileBrowserLaunched = false;
         bool isApiKeyOrQueryLimitException = false;
@@ -58,10 +47,6 @@ namespace JushoLatLong {
 
             fileUtil = new FileUtil();
 
-            // default output folder
-            SetDefaultOutputFolder();
-            tb_output_folder.Text = outputFolder;
-
             headers = new CompanyProfile {
                 CompanyCode = "会社コード",
                 PrefecturesName = "都道府県名",
@@ -87,19 +72,23 @@ namespace JushoLatLong {
             // set selected file name to textbox
             if (String.IsNullOrEmpty(selectedFileName)) {
 
-                tb_file_name.Text = "";
-                // disable btn_get_map_cordinate
-                DisableGetLatLongBtn();
-
                 UpdateStatus("Please select csv file");
 
+                tb_file_name.Text = "";
+                tb_output_folder.Text = "";
+
+                // disable btn_get_map_cordinate
+                DisableGetLatLongBtn();
             } else {
 
                 tb_file_name.Text = selectedFileName;
+                UpdateStatus("");
+
                 // enable btn_get_map_cordinate
                 EnableGetLatLongBtn();
 
-                UpdateStatus("");
+                // default output folder
+                SetDefaultOutputFolder();
             }
 
         }
@@ -234,7 +223,8 @@ namespace JushoLatLong {
                     var locationService = new GoogleLocationService(mapApiKey);
                     MapPoint mapPoint = null;
 
-                    csvReader.Read();             // skip header (1st line)
+                    csvReader.Read();             // 1st line == header
+
                     while (csvReader.Read()) {
                         if (apiCallCancelTonek.IsCancellationRequested) {
                             break;
@@ -272,7 +262,7 @@ namespace JushoLatLong {
                             }
 
                             //Thread.Sleep(1000);
-                            await Task.Delay(1000);
+                            await Task.Delay(100);
 
                         } catch (WebException ex) {
 
@@ -310,15 +300,17 @@ namespace JushoLatLong {
         }
 
         private async Task<bool> WriteDataToCsvAsync(string outputFolder) {
-
-            validAddressCsvFile = $"{outputFolder}\\valid_address_with_coordinate.csv";
-            missingAdressCsvFIle = $"{outputFolder}\\missing_address.csv";
+            var fileNameOnly = Path.GetFileNameWithoutExtension(selectedFileName);
+            validAddressCsvFile = $"{outputFolder}\\{fileNameOnly}_ok.csv";
+            missingAdressCsvFIle = $"{outputFolder}\\{fileNameOnly}_error.csv";
 
             await Task.Run(() => {
 
                 // valid addresses
                 if (!File.Exists(validAddressCsvFile)) {
-                    File.Create(validAddressCsvFile);
+                    using (var fs = File.Create(validAddressCsvFile)) {
+                        // auto disposal
+                    }
                 }
                 using (var csvWriter = new CsvWriter(new StreamWriter(File.Open(validAddressCsvFile, FileMode.Truncate, FileAccess.ReadWrite)))) {
                     csvWriter.WriteRecord<CompanyProfile>(headers);
@@ -328,7 +320,9 @@ namespace JushoLatLong {
 
                 // missing addresses
                 if (!File.Exists(missingAdressCsvFIle)) {
-                    File.Create(missingAdressCsvFIle);
+                    using (var fs = File.Create(missingAdressCsvFIle)) {
+                        // auto disposal
+                    }
                 }
                 using (var csvWriter = new CsvWriter(new StreamWriter(File.Open(missingAdressCsvFIle, FileMode.Truncate, FileAccess.ReadWrite)))) {
                     csvWriter.WriteRecord<CompanyProfile>(headers);
@@ -343,9 +337,23 @@ namespace JushoLatLong {
 
         // helper functions
         private void SetDefaultOutputFolder() {
-            // If the folder does not exist yet, it will be created.
-            // If the folder exists already, the line will be ignored.
-            outputFolder = Directory.CreateDirectory(@"C:\CSV_Exported").FullName;
+            var selectedFileDir = Path.GetDirectoryName(selectedFileName);
+            var defaultOutputFolder = !string.IsNullOrEmpty(selectedFileDir) ? $"{selectedFileDir}\\CSV_Exported" : @"C:\CSV_Exported";
+
+            try {
+                // If the folder does not exist yet, it will be created.
+                // If the folder exists already, the line will be ignored.
+                outputFolder = Directory.CreateDirectory(defaultOutputFolder).FullName;
+
+                //throw new UnauthorizedAccessException();
+                tb_output_folder.Text = outputFolder;
+
+            } catch (Exception ex) {
+                MessageBox.Show(caption: "Default Output Folder Error",
+                                                   messageBoxText: $"Could not create defualt output folder \"{defaultOutputFolder}\" [ Error: {ex.Message} ]. Please browse and select output folder before calling API.",
+                                                   button: MessageBoxButton.OK
+                                              );
+            }
         }
 
         private void UpdateStatus(string text) {
@@ -406,7 +414,7 @@ namespace JushoLatLong {
         }
 
         private void OnFileNameTextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) {
-            
+
             // do not listen if file browser launched
             if (isFileBrowserLaunched) {
                 isFileBrowserLaunched = false;

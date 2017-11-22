@@ -8,11 +8,11 @@ using System.Windows;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("JushoLatLong")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Getting  Google Map Latitude & Longitude from address")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Hewlett-Packard")]
+[assembly: AssemblyCompany("SY SYSTEM")]
 [assembly: AssemblyProduct("JushoLatLong")]
-[assembly: AssemblyCopyright("Copyright © Hewlett-Packard 2017")]
+[assembly: AssemblyCopyright("Copyright © SY SYSTEM 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

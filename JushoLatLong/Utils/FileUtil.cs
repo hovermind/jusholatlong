@@ -7,15 +7,11 @@ using System.Threading.Tasks;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.IO;
 
-namespace JushoLatLong.Utils
-{
-    class FileUtil : IFileUtil
-    {
-        public string GetSelectedFile(string fileType)
-        {
+namespace JushoLatLong.Utils {
+    class FileUtil : IFileUtil {
+        public string GetSelectedFile(string fileType) {
             // create OpenFileDialog
-            var fileDialog = new OpenFileDialog
-            {
+            var fileDialog = new OpenFileDialog {
                 Title = "Browse File",
                 // filter for file extension & default file extension
                 DefaultExt = $".{fileType}",
@@ -35,8 +31,7 @@ namespace JushoLatLong.Utils
 
         public string GetOutputFolder() {
 
-            var folderDialog = new CommonOpenFileDialog
-            {
+            var folderDialog = new CommonOpenFileDialog {
                 Title = "Browse Folder",
                 IsFolderPicker = true,
                 Multiselect = false
@@ -61,7 +56,8 @@ namespace JushoLatLong.Utils
                 return false;
 
             } catch (IOException ex) {
-                return true;
+
+                return ex != null;
             }
         }
     }

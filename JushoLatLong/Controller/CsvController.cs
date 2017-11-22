@@ -11,8 +11,6 @@ using System.Threading.Tasks;
 
 namespace JushoLatLong.Controller {
 
-
-
     class CsvController : ICsvController {
 
         //public IEnumerable<T> GetProfileListFromCsv<T>(string csvFile) {

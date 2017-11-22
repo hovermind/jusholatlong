@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace JushoLatLong.Controller {
 
-    interface ICsvController{
+    interface ICsvController {
         //IEnumerable<T> GetProfileListFromCsv<T>(string csvFile);
     }
 }

@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         WindowStyle="ThreeDBorderWindow"
         Title="Jusho Latitude Longitude" Height="350" Width="525"
-        Icon="pack://application:,,,/Icon/icon_location.png">
+        Icon="pack://application:,,,/Icon/icon_uninstall.ico">
     <Grid>
         <TextBox x:Name="tb_file_name" HorizontalAlignment="Left" Height="30" Margin="87,20,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="304" VerticalContentAlignment="Center" AutomationProperties.HelpText="csv file location" SpellCheck.IsEnabled="True" TextChanged="OnFileNameTextChanged"/>
         <Button x:Name="btn_browse_file" Content="Browse" HorizontalAlignment="Left" Margin="396,20,0,0" VerticalAlignment="Top" Width="92" Height="30" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" ScrollViewer.CanContentScroll="True" Click="OnClickBrowseFileBtn" FontSize="14"/>

@@ -33,6 +33,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>JushoLatLong.App</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>location.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="CsvHelper, Version=6.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
       <HintPath>..\packages\CsvHelper.6.0.0\lib\net45\CsvHelper.dll</HintPath>
@@ -120,6 +126,16 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icon\icon_location.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icon\icon_location.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icon\icon_uninstall.ico" />
+    <Resource Include="Icon\location.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="location.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
