@@ -337,6 +337,10 @@ namespace JushoLatLong {
 
         // helper functions
         private void SetDefaultOutputFolder() {
+            if (String.IsNullOrEmpty(selectedFileName)) {
+                return;
+            }
+
             var selectedFileDir = Path.GetDirectoryName(selectedFileName);
             var defaultOutputFolder = !string.IsNullOrEmpty(selectedFileDir) ? $"{selectedFileDir}\\CSV_Exported" : @"C:\CSV_Exported";
 
@@ -359,21 +363,21 @@ namespace JushoLatLong {
         private void UpdateStatus(string text) {
             //safe call
             Dispatcher.Invoke(() => {
-                _LabelStatus.Content = text;
+                _TextBoxStatus.Text = text;
             });
         }
 
         private void UpdateSuccess(string text) {
             //safe call
             Dispatcher.Invoke(() => {
-                _LabelSuccessCount.Content = text;
+                _TextBoxSuccessCount.Text = text;
             });
         }
 
         private void UpdateError(string text) {
             //safe call
             Dispatcher.Invoke(() => {
-                _LabelErrorCount.Content = text;
+                _TextBoxErrorCount.Text = text;
             });
         }
 
@@ -432,5 +436,6 @@ namespace JushoLatLong {
                 DisableGetLatLongBtn();
             }
         }
+
     }
 }
