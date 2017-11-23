@@ -62,7 +62,7 @@ namespace JushoLatLong {
             };
         }
 
-        private void OnClickBrowseFileBtn(object sender, RoutedEventArgs e) {
+        private void OnClickBrowseFileButton(object sender, RoutedEventArgs e) {
             isFileBrowserLaunched = true;
             ResetGuiTxt();
 
@@ -74,14 +74,14 @@ namespace JushoLatLong {
 
                 UpdateStatus("Please select csv file");
 
-                tb_file_name.Text = "";
-                tb_output_folder.Text = "";
+                _TextBoxFileName.Text = "";
+                _TextBoxOutputFolder.Text = "";
 
                 // disable btn_get_map_cordinate
                 DisableGetLatLongBtn();
             } else {
 
-                tb_file_name.Text = selectedFileName;
+                _TextBoxFileName.Text = selectedFileName;
                 UpdateStatus("");
 
                 // enable btn_get_map_cordinate
@@ -93,22 +93,22 @@ namespace JushoLatLong {
 
         }
 
-        private void OnClickBrowseFolderBtn(object sender, RoutedEventArgs e) {
+        private void OnClickBrowseFolderButton(object sender, RoutedEventArgs e) {
             outputFolder = fileUtil?.GetOutputFolder();
 
             // if user canceled folder selection
             if ("".Equals(outputFolder)) SetDefaultOutputFolder();
 
             // set output folder name to textbox
-            tb_output_folder.Text = outputFolder;
+            _TextBoxOutputFolder.Text = outputFolder;
         }
 
-        private async void OnClickGetMapCoordinate(object sender, RoutedEventArgs e) {
+        private async void OnClickGetMapCoordinateButton(object sender, RoutedEventArgs e) {
             // reset gui txt
             ResetGuiTxt();
 
             // check map api key
-            var givenMapApiKey = tb_map_api_key.Text;
+            var givenMapApiKey = _TextBoxMapApiKey.Text;
             if (String.IsNullOrEmpty(givenMapApiKey)) {
 
                 var dialogResult = MessageBox.Show(caption: "Google Map API Key",
@@ -196,7 +196,7 @@ namespace JushoLatLong {
             }
         }
 
-        private void OnClickStopApiCallBtn(object sender, RoutedEventArgs e) {
+        private void OnClickStopApiCallButton(object sender, RoutedEventArgs e) {
             cancellationTokenSource?.Cancel();
         }
 
@@ -346,7 +346,7 @@ namespace JushoLatLong {
                 outputFolder = Directory.CreateDirectory(defaultOutputFolder).FullName;
 
                 //throw new UnauthorizedAccessException();
-                tb_output_folder.Text = outputFolder;
+                _TextBoxOutputFolder.Text = outputFolder;
 
             } catch (Exception ex) {
                 MessageBox.Show(caption: "Default Output Folder Error",
@@ -359,21 +359,21 @@ namespace JushoLatLong {
         private void UpdateStatus(string text) {
             //safe call
             Dispatcher.Invoke(() => {
-                label_status_live_update.Content = text;
+                _LabelStatus.Content = text;
             });
         }
 
         private void UpdateSuccess(string text) {
             //safe call
             Dispatcher.Invoke(() => {
-                label_success_count.Content = text;
+                _LabelSuccessCount.Content = text;
             });
         }
 
         private void UpdateError(string text) {
             //safe call
             Dispatcher.Invoke(() => {
-                label_error_count.Content = text;
+                _LabelErrorCount.Content = text;
             });
         }
 
@@ -389,19 +389,19 @@ namespace JushoLatLong {
         }
 
         private void EnableGetLatLongBtn() {
-            btn_get_map_coordinate.IsEnabled = true;
+            _ButtonGetMapCoordinate.IsEnabled = true;
         }
 
         private void DisableGetLatLongBtn() {
-            btn_get_map_coordinate.IsEnabled = false;
+            _ButtonGetMapCoordinate.IsEnabled = false;
         }
 
         private void DisableStopApiCallBtn() {
-            btn_stop_api_call.IsEnabled = false;
+            _ButtonStopApiCall.IsEnabled = false;
         }
 
         private void EnableStopApiCallBtn() {
-            btn_stop_api_call.IsEnabled = true;
+            _ButtonStopApiCall.IsEnabled = true;
         }
 
         private void DisableApiCallLatLongBtns() {
@@ -413,7 +413,7 @@ namespace JushoLatLong {
             Debug.WriteLine($"Logging from: {tag} => {msg}");
         }
 
-        private void OnFileNameTextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) {
+        private void OnChangeFileName(object sender, System.Windows.Controls.TextChangedEventArgs e) {
 
             // do not listen if file browser launched
             if (isFileBrowserLaunched) {
