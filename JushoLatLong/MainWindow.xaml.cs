@@ -14,6 +14,8 @@ using GoogleMaps.LocationServices;
 using System.Threading;
 using System.Windows.Controls;
 using System.Net;
+using static GoogleMaps.LocationServices.Directions;
+using JushoLatLong.ViewModel;
 
 namespace JushoLatLong {
 
@@ -37,8 +39,14 @@ namespace JushoLatLong {
         List<CompanyProfile> profilesWithMissingAddress = null;
         CompanyProfile headers = null;
 
+        // activity status
+        UiInfo uiInfo = null;
+
         public MainWindow() {
             InitializeComponent();
+
+            uiInfo = new UiInfo();
+            DataContext = uiInfo;
 
             Init();
         }
@@ -363,7 +371,7 @@ namespace JushoLatLong {
         private void UpdateStatus(string text) {
             //safe call
             Dispatcher.Invoke(() => {
-                _TextBoxStatus.Text = text;
+                uiInfo.StatusMessage = text;
             });
         }
 

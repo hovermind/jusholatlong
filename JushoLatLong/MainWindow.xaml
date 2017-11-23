@@ -40,7 +40,7 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBox x:Name="_TextBoxFileName" Grid.Row="0" Grid.Column="0"></TextBox>
+                    <TextBox Text="{Binding SelectedFile}" x:Name="_TextBoxFileName" Grid.Row="0" Grid.Column="0"></TextBox>
                     <Button x:Name="_ButtonBrowseFile"  Margin="5 0 0 0" Content="Browse" Grid.Row="0" Grid.Column="1" Click="OnClickBrowseFileButton"></Button>
                 </Grid>
             </StackPanel>
@@ -56,7 +56,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <TextBox x:Name="_TextBoxOutputFolder" Grid.Row="0" Grid.Column="0"></TextBox>
+                    <TextBox Text="{Binding OutputFolder}" x:Name="_TextBoxOutputFolder" Grid.Row="0" Grid.Column="0"></TextBox>
                     <Button x:Name="_ButtonBrowseOutputFolder" Margin="5 0 0 0" Content="Browse" Grid.Row="0" Grid.Column="1" Click="OnClickBrowseFolderButton"></Button>
                 </Grid>
             </StackPanel>
@@ -64,7 +64,7 @@
             <!-- map api key -->
             <StackPanel Orientation="Vertical" Margin="0 0 0 20">
                 <TextBlock Text="Google Map API Key" Margin="0 0 0 5"/>
-                <TextBox x:Name="_TextBoxMapApiKey"></TextBox>
+                <TextBox Text="{Binding MapApiKey}" x:Name="_TextBoxMapApiKey"></TextBox>
             </StackPanel>
 
             <!-- buttons -->
@@ -81,7 +81,7 @@
             </Grid>
 
             <!-- Status -->
-            <TextBox x:Name="_TextBoxStatus" Margin="0 0 0 20" HorizontalAlignment="Center" IsReadOnly="True" BorderThickness="0"/>
+            <TextBox x:Name="_TextBoxStatus" Text="{Binding StatusMessage}"  Margin="0 0 0 20" HorizontalAlignment="Center" IsReadOnly="True" BorderThickness="0"/>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -93,9 +93,9 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <TextBlock HorizontalAlignment="Right" Grid.Row="0" Grid.Column="0" Text="Success:"/>
-                <TextBox x:Name="_TextBoxSuccessCount" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
+                <TextBox Text="{Binding SuccessCount}" x:Name="_TextBoxSuccessCount" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
                 <TextBlock HorizontalAlignment="Right" Grid.Row="0" Grid.Column="2" Text="Error:"/>
-                <TextBox x:Name="_TextBoxErrorCount" Grid.Row="0" Grid.Column="3" HorizontalAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
+                <TextBox Text="{Binding ErrorCount}" x:Name="_TextBoxErrorCount" Grid.Row="0" Grid.Column="3" HorizontalAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
             </Grid>
 
         </StackPanel>
