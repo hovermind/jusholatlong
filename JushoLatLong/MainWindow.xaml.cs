@@ -87,9 +87,9 @@ namespace JushoLatLong
             DisableCallApiButton();
             EnableStopApiButton();
 
-            #region Input CSV File
+            #region Map API Key
 
-            // check map api key is provided
+            // check: map api key is provided
             if (String.IsNullOrEmpty(activity.MapApiKey))
             {
                 ShowMessage("Please provide Google Map API Key");
@@ -98,6 +98,24 @@ namespace JushoLatLong
 
                 return;
             }
+
+            // check: map api key is valid & did not exceed query limit not
+            try
+            {
+                var point = new GoogleLocationService(activity.MapApiKey).GetLatLongFromAddress("1 Chome-9 Marunouchi, Chiyoda-ku, Tōkyō-to 100-0005");
+            }
+            catch (WebException ex)
+            {
+                ShowMessage("Invalid Map API Key or query limit exceeded!");
+                EnableCallApiButton();
+                DisableStopApiButton();
+
+                return;
+            }
+
+            #endregion
+
+            #region Input CSV File
 
             // check input csv file exists & not locked
             if (!File.Exists(activity.SelectedFile) || fileUtil.IsFileLocked(activity.SelectedFile))
@@ -157,6 +175,9 @@ namespace JushoLatLong
             // cancellation TokenSource
             cts?.Dispose();
             cts = new CancellationTokenSource();
+
+            // api call related exception
+            var isWebException = false;
 
             using (var csvReader = new CsvReader(new StreamReader(activity.SelectedFile, Encoding.UTF8)))
             using (var okCsvWriter = new CsvWriter(new StreamWriter(File.Open(validAddressCsvFile, FileMode.Truncate, FileAccess.ReadWrite))))
@@ -234,17 +255,21 @@ namespace JushoLatLong
                         }
                         catch (WebException ex)
                         {
+                            isWebException = true;
                             // update gui
                             ShowMessage($"[ ERROR ] {ex?.Message}");
-                            break;
+                            return;
                         }
                     }
                 });
 
-                ShowMessage("All done");
-                if (cts.Token.IsCancellationRequested) ShowMessage("All done (Api call cancelled)");
                 EnableCallApiButton();
                 DisableStopApiButton();
+
+                if (isWebException) return;
+
+                ShowMessage("All done");
+                if (cts.Token.IsCancellationRequested) ShowMessage("All done (Api call cancelled)");
             }
         }
 
