@@ -78,7 +78,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <Button IsEnabled="{Binding IsEnabledCallApiButton}" x:Name="_ButtonGetMapCoordinate" Margin="0 0 5 0" Content="Get Latitude, Longitude ( 「 緯度、経度 」 を 取得  )" Grid.Row="0" Grid.Column="0" Click="OnClickCallApiButton" />
+                    <Button IsEnabled="{Binding IsEnabledCallApiButton}" x:Name="_ButtonGetMapCoordinate" Margin="0 0 5 0" Content="Get Latitude, Longitude (「 緯度、経度 」 を 取得する)" Grid.Row="0" Grid.Column="0" Click="OnClickCallApiButton" />
                     <Button IsEnabled="{Binding IsEnabledStopApiButton}" x:Name="_ButtonStopApiCall" Content="Stop API Call" Grid.Row="0" Grid.Column="1" Click="OnClickStopApiButton" />
                 </Grid>
                 

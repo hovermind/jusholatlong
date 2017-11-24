@@ -22,25 +22,15 @@ namespace JushoLatLong
 
     public partial class MainWindow : Window
     {
-
         // data context
         private ActivityViewModel activity = null;
 
+        // api call cancellation token
+        private CancellationTokenSource cts = null;
+
         private IFileUtil fileUtil = null;
-        private CancellationTokenSource cancellationTokenSource = null;
 
-        bool isApiKeyOrQueryLimitException = false;
-
-
-
-        string validAddressCsvFile = "";
-        string missingAdressCsvFIle = "";
-
-        // to hold found & missing addresses
-        List<CompanyProfile> profilesWithCoordinate = null;
-        List<CompanyProfile> profilesWithMissingAddress = null;
         CompanyProfile headers = null;
-
 
         public MainWindow()
         {
@@ -70,7 +60,6 @@ namespace JushoLatLong
 
         private void OnClickBrowseFileButton(object sender, RoutedEventArgs e)
         {
-
             ResetUIMessages();
 
             // selected file (csv)
@@ -82,39 +71,40 @@ namespace JushoLatLong
                 if (String.IsNullOrEmpty(activity.OutputFolder)) SetDefaultOutputFolder(fileNameString);
                 ShowMessage("");
                 EnableCallApiButton();
-
             }
             else
             {
-
                 ShowMessage("Please select file");
                 DisableCallApiButton();
-
             }
-
         }
 
         private void OnClickBrowseFolderButton(object sender, RoutedEventArgs e)
         {
-
             var outputFolderString = fileUtil?.GetOutputFolder();
 
             activity.OutputFolder = outputFolderString;
-
         }
 
         private async void OnClickCallApiButton(object sender, RoutedEventArgs e)
         {
             ResetUIMessages();
+            DisableCallApiButton();
+            EnableStopApiButton();
+
+            #region Input CSV File
 
             // check map api key is provided
             if (String.IsNullOrEmpty(activity.MapApiKey))
             {
                 ShowMessage("Please provide Google Map API Key");
+                EnableCallApiButton();
+                DisableStopApiButton();
+
                 return;
             }
 
-            // check file exists & not locked
+            // check input csv file exists & not locked
             if (!File.Exists(activity.SelectedFile) || fileUtil.IsFileLocked(activity.SelectedFile))
             {
                 if (!File.Exists(activity.SelectedFile))
@@ -126,87 +116,58 @@ namespace JushoLatLong
                     ShowMessage("File is locked, please close it & try again!");
                 }
 
-                DisableCallApiButton();
+                EnableCallApiButton();
+                DisableStopApiButton();
+
                 return;
             }
 
-            DisableCallApiButton();
-            EnableStopApiButton();
+            #endregion
 
-            // prepare data lists
-            var isDataReady = await CreateOutputDataListAsync(this, activity.SelectedFile);
+            #region Output CSV File
 
-            if (!cancellationTokenSource.IsCancellationRequested)
+            // ouput folder
+            if (String.IsNullOrEmpty(activity.OutputFolder)) SetDefaultOutputFolder(activity.SelectedFile);
+
+            // exception: while creating files
+            var fileNameOnly = Path.GetFileNameWithoutExtension(activity.SelectedFile);
+            var validAddressCsvFile = $"{activity.OutputFolder}\\{fileNameOnly}_ok.csv";
+            var missingAdressCsvFIle = $"{activity.OutputFolder}\\{fileNameOnly}_error.csv";
+            try
             {
-
-                if (isApiKeyOrQueryLimitException)
-                {
-
-                    isApiKeyOrQueryLimitException = false;
-
-                    var dialogResult = MessageBox.Show(caption: "Exception!",
-                                                       messageBoxText: "Wrong map API key or query limit exceeded!",
-                                                       button: MessageBoxButton.OK
-                                                  );
-                    EnableCallApiButton();
-                    DisableStopApiButton();
-
-                    return;
-
-                }
-                else
-                {
-
-                    // export data to csv
-                    ExportDataToCsv(isDataReady);
-                }
-
+                if (!File.Exists(validAddressCsvFile)) File.Create(validAddressCsvFile).Close();
+                if (!File.Exists(missingAdressCsvFIle)) File.Create(missingAdressCsvFIle).Close();
             }
-            else
+            catch (Exception ex)
             {
+                ShowMessage($"[ ERROR ] {ex.Message}");
+                EnableCallApiButton();
+                DisableStopApiButton();
 
-                var dialogResult = MessageBox.Show(caption: "API call cancelled",
-                                                   messageBoxText: "Would you like to write data to csv?",
-                                                   button: MessageBoxButton.YesNo
-                                              );
-
-                if (dialogResult == MessageBoxResult.Yes)
-                {
-
-                    ExportDataToCsv(true);
-
-                }
-                else if (dialogResult == MessageBoxResult.No)
-                {
-
-                    ResetUIMessages();
-                    ShowMessage("API call cancelled!");
-
-                    ResetDataList();
-
-                    EnableCallApiButton();
-                    DisableStopApiButton();
-                }
+                return;
             }
-        }
 
-        private void OnClickStopApiButton(object sender, RoutedEventArgs e)
-        {
-            cancellationTokenSource?.Cancel();
-        }
-
-        private async Task<bool> CreateOutputDataListAsync(MainWindow gui, string csvFile)
-        {
-
-            profilesWithCoordinate = new List<CompanyProfile>();
-            profilesWithMissingAddress = new List<CompanyProfile>();
-
-            using (cancellationTokenSource = new CancellationTokenSource())
-            using (CsvReader csvReader = new CsvReader(new StreamReader(csvFile, Encoding.UTF8)))
+            // cehck: output file are not locked
+            if (fileUtil.IsFileLocked(validAddressCsvFile) || fileUtil.IsFileLocked(missingAdressCsvFIle))
             {
+                ShowMessage($"[ ERROR ] output csv file locked");
+                EnableCallApiButton();
+                DisableStopApiButton();
 
-                var apiCallCancelTonek = cancellationTokenSource.Token;
+                return;
+            }
 
+            #endregion
+
+            // cancellation TokenSource
+            cts?.Dispose();
+            cts = new CancellationTokenSource();
+
+            using (var csvReader = new CsvReader(new StreamReader(activity.SelectedFile, Encoding.UTF8)))
+            using (var okCsvWriter = new CsvWriter(new StreamWriter(File.Open(validAddressCsvFile, FileMode.Truncate, FileAccess.ReadWrite))))
+            using (var errorCsvWriter = new CsvWriter(new StreamWriter(File.Open(missingAdressCsvFIle, FileMode.Truncate, FileAccess.ReadWrite))))
+            {
+                // reader configuration
                 csvReader.Configuration.Delimiter = ",";              // using "," instead of ";"
                 csvReader.Configuration.HasHeaderRecord = false;      // can not map Japanese character to english property name
                 csvReader.Configuration.MissingFieldFound = null;     // some field can be missing
@@ -214,150 +175,93 @@ namespace JushoLatLong
                 await Task.Run(async () =>
                 {
 
-                    var rowCounter = 0;
+                    //var rowCounter = 0;
                     var successCounter = 0;
                     var errorCounter = 0;
+
+                    // write headers
+                    okCsvWriter.WriteRecord(headers);
+                    okCsvWriter.NextRecord();
+                    errorCsvWriter.WriteRecord(headers);
+                    errorCsvWriter.NextRecord();
 
                     var locationService = new GoogleLocationService(activity.MapApiKey);
                     MapPoint mapPoint = null;
 
-                    csvReader.Read();             // 1st line == header
-
+                    // start reading
+                    csvReader.Read();   // skip header
                     while (csvReader.Read())
                     {
-                        if (apiCallCancelTonek.IsCancellationRequested)
-                        {
-                            break;
-                        }
-                        if (++rowCounter > 10)
-                        {
-                            break;
-                        }
+                        if (cts.Token.IsCancellationRequested) break;
 
                         var profile = csvReader.GetRecord<CompanyProfile>();
-                        var address = String.IsNullOrEmpty(profile.Address) ? "UDFGUWEF78R7YT 8924512" : profile.Address;
+                        var address = profile?.Address;
+
+                        // in case address is null or empty
+                        if (String.IsNullOrEmpty(address))
+                        {
+                            errorCsvWriter.WriteRecord(profile);
+                            errorCsvWriter.NextRecord();
+
+                            // update gui
+                            ShowMessage("Address is null or empty");
+                            UpdateErrorCount($"{++errorCounter}");
+
+                            continue;
+                        }
 
                         try
                         {
-
                             mapPoint = locationService.GetLatLongFromAddress(address);
                             if (mapPoint != null && mapPoint.Latitude != 0.0 && mapPoint.Longitude != 0.0)
                             {
-
                                 profile.Latitude = mapPoint.Latitude.ToString();
                                 profile.Longitude = mapPoint.Longitude.ToString();
 
-                                // add to valid address list
-                                profilesWithCoordinate.Add(profile);
+                                okCsvWriter.WriteRecord(profile);
+                                okCsvWriter.NextRecord();
 
                                 // update gui
-                                gui.ShowMessage($"{profile.Latitude} , {profile.Longitude} [  {address}  ]");
-                                gui.UpdateSuccessCount($"{++successCounter}");
-
+                                ShowMessage($"{profile.Latitude} , {profile.Longitude} [  {address}  ]");
+                                UpdateSuccessCount($"{++successCounter}");
                             }
                             else
                             {
-
-                                // add to missing address list
-                                profilesWithMissingAddress.Add(profile);
+                                errorCsvWriter.WriteRecord(profile);
+                                errorCsvWriter.NextRecord();
 
                                 // update gui
-                                gui.ShowMessage("Not found");
-                                gui.UpdateErrorCount($"{++errorCounter}");
+                                ShowMessage("Not found");
+                                UpdateErrorCount($"{++errorCounter}");
                             }
 
-                            //Thread.Sleep(1000);
                             await Task.Delay(100);
-
                         }
                         catch (WebException ex)
                         {
-
-                            isApiKeyOrQueryLimitException = true;
-
                             // update gui
-                            ShowMessage($"[ ERROR: {ex.Message} ]");
-
+                            ShowMessage($"[ ERROR ] {ex?.Message}");
                             break;
                         }
                     }
                 });
 
-                return true;
+                ShowMessage("All done");
+                if (cts.Token.IsCancellationRequested) ShowMessage("All done (Api call cancelled)");
+                EnableCallApiButton();
+                DisableStopApiButton();
             }
         }
 
-        private async void ExportDataToCsv(bool isDataReady)
+        private void OnClickStopApiButton(object sender, RoutedEventArgs e)
         {
-
-            if (isDataReady)
-            {
-                DisableAllButtons();
-
-                // write data to csv file
-                ShowMessage("Writing csv  . . .    . . .");
-                await Task.Delay(1500);
-
-                var isWritingDone = await WriteDataToCsvAsync(activity.OutputFolder);
-
-                if (isWritingDone)
-                {
-                    //ResetGuiTxt();
-                    ShowMessage("All done!");
-                    EnableCallApiButton();
-                }
-            }
-        }
-
-        private async Task<bool> WriteDataToCsvAsync(string outputFolder)
-        {
-            var fileNameOnly = Path.GetFileNameWithoutExtension(activity.SelectedFile);
-            validAddressCsvFile = $"{outputFolder}\\{fileNameOnly}_ok.csv";
-            missingAdressCsvFIle = $"{outputFolder}\\{fileNameOnly}_error.csv";
-
-            await Task.Run(() =>
-            {
-
-                // valid addresses
-                if (!File.Exists(validAddressCsvFile))
-                {
-                    using (var fs = File.Create(validAddressCsvFile))
-                    {
-                        // auto disposal
-                    }
-                }
-                using (var csvWriter = new CsvWriter(new StreamWriter(File.Open(validAddressCsvFile, FileMode.Truncate, FileAccess.ReadWrite))))
-                {
-                    csvWriter.WriteRecord<CompanyProfile>(headers);
-                    csvWriter.NextRecord();
-                    csvWriter.WriteRecords(profilesWithCoordinate);
-                }
-
-                // missing addresses
-                if (!File.Exists(missingAdressCsvFIle))
-                {
-                    using (var fs = File.Create(missingAdressCsvFIle))
-                    {
-                        // auto disposal
-                    }
-                }
-                using (var csvWriter = new CsvWriter(new StreamWriter(File.Open(missingAdressCsvFIle, FileMode.Truncate, FileAccess.ReadWrite))))
-                {
-                    csvWriter.WriteRecord<CompanyProfile>(headers);
-                    csvWriter.NextRecord();
-                    csvWriter.WriteRecords(profilesWithMissingAddress);
-                }
-
-            });
-
-            return true;
+            cts?.Cancel();
         }
 
         #region Helper Functions
 
         private void SetDefaultOutputFolder(string selectedFile)
         {
-
             // early return
             if (String.IsNullOrEmpty(selectedFile))
             {
@@ -368,16 +272,13 @@ namespace JushoLatLong
             var outputFolderString = $"{Path.GetDirectoryName(selectedFile)}\\CSV_Exported";
             try
             {
-
                 var defaulOutputFolder = Directory.CreateDirectory(outputFolderString).FullName;
                 //throw new UnauthorizedAccessException();
-
                 activity.OutputFolder = defaulOutputFolder;
-
             }
             catch (Exception ex)
             {
-                MessageBox.Show(caption: "Default Output Folder Error",
+                MessageBox.Show(caption: "Output Folder Error",
                                  messageBoxText: $"Could not create defualt output folder \"{outputFolderString}\" [ Error: {ex.Message} ].\nPlease browse and select output folder before calling API.",
                                  button: MessageBoxButton.OK
                                );
@@ -404,12 +305,6 @@ namespace JushoLatLong
             ShowMessage("");
             UpdateSuccessCount("0");
             UpdateErrorCount("0");
-        }
-
-        private void ResetDataList()
-        {
-            profilesWithCoordinate = null;
-            profilesWithMissingAddress = null;
         }
 
         private void EnableCallApiButton()
