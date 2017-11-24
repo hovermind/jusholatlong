@@ -3,18 +3,13 @@ using JushoLatLong.Model.Domain;
 using JushoLatLong.Utils;
 using System.IO;
 using System.Windows;
-using System.Diagnostics;
 using CsvHelper;
 using System.Text;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using System;
 using GoogleMaps.LocationServices;
 using System.Threading;
-using System.Windows.Controls;
 using System.Net;
-using static GoogleMaps.LocationServices.Directions;
 using JushoLatLong.ViewModel;
 
 namespace JushoLatLong

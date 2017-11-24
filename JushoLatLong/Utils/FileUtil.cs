@@ -1,13 +1,9 @@
 ﻿using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.IO;
 
-namespace JushoLatLong.Utils {
+namespace JushoLatLong.Utils
+{
     class FileUtil : IFileUtil {
         public string GetSelectedFile(string fileType) {
             // create OpenFileDialog
