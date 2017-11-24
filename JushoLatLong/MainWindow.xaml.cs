@@ -17,20 +17,22 @@ using System.Net;
 using static GoogleMaps.LocationServices.Directions;
 using JushoLatLong.ViewModel;
 
-namespace JushoLatLong {
+namespace JushoLatLong
+{
 
-    public partial class MainWindow : Window {
+    public partial class MainWindow : Window
+    {
 
-        IFileUtil fileUtil = null;
-        bool isFileBrowserLaunched = false;
+        // data context
+        private ActivityViewModel activity = null;
+
+        private IFileUtil fileUtil = null;
+        private CancellationTokenSource cancellationTokenSource = null;
+
         bool isApiKeyOrQueryLimitException = false;
 
-        CancellationTokenSource cancellationTokenSource = null;
-        string mapApiKey = "";
-        string nonceAddress = "UDFGUWEF78R7YT 8924512";
 
-        string selectedFileName = "";
-        string outputFolder = "";
+
         string validAddressCsvFile = "";
         string missingAdressCsvFIle = "";
 
@@ -39,23 +41,19 @@ namespace JushoLatLong {
         List<CompanyProfile> profilesWithMissingAddress = null;
         CompanyProfile headers = null;
 
-        // activity status
-        UiInfo uiInfo = null;
 
-        public MainWindow() {
+        public MainWindow()
+        {
             InitializeComponent();
 
-            uiInfo = new UiInfo();
-            DataContext = uiInfo;
-
-            Init();
-        }
-
-        private void Init() {
+            // set data context
+            activity = new ActivityViewModel();
+            DataContext = activity;
 
             fileUtil = new FileUtil();
 
-            headers = new CompanyProfile {
+            headers = new CompanyProfile
+            {
                 CompanyCode = "会社コード",
                 PrefecturesName = "都道府県名",
                 CityName = "市区町村名",
@@ -70,151 +68,142 @@ namespace JushoLatLong {
             };
         }
 
-        private void OnClickBrowseFileButton(object sender, RoutedEventArgs e) {
-            isFileBrowserLaunched = true;
-            ResetGuiTxt();
+        private void OnClickBrowseFileButton(object sender, RoutedEventArgs e)
+        {
 
-            // get selected file name
-            selectedFileName = fileUtil?.GetSelectedFile("csv");
+            ResetUIMessages();
 
-            // set selected file name to textbox
-            if (String.IsNullOrEmpty(selectedFileName)) {
+            // selected file (csv)
+            var fileNameString = fileUtil?.GetSelectedFile("csv");
+            activity.SelectedFile = fileNameString;
 
-                UpdateStatus("Please select csv file");
+            if (!String.IsNullOrEmpty(fileNameString))
+            {
+                if (String.IsNullOrEmpty(activity.OutputFolder)) SetDefaultOutputFolder(fileNameString);
+                ShowMessage("");
+                EnableCallApiButton();
 
-                _TextBoxFileName.Text = "";
-                _TextBoxOutputFolder.Text = "";
+            }
+            else
+            {
 
-                // disable btn_get_map_cordinate
-                DisableGetLatLongBtn();
-            } else {
+                ShowMessage("Please select file");
+                DisableCallApiButton();
 
-                _TextBoxFileName.Text = selectedFileName;
-                UpdateStatus("");
-
-                // enable btn_get_map_cordinate
-                EnableGetLatLongBtn();
-
-                // default output folder
-                SetDefaultOutputFolder();
             }
 
         }
 
-        private void OnClickBrowseFolderButton(object sender, RoutedEventArgs e) {
-            outputFolder = fileUtil?.GetOutputFolder();
+        private void OnClickBrowseFolderButton(object sender, RoutedEventArgs e)
+        {
 
-            // if user canceled folder selection
-            if ("".Equals(outputFolder)) SetDefaultOutputFolder();
+            var outputFolderString = fileUtil?.GetOutputFolder();
 
-            // set output folder name to textbox
-            _TextBoxOutputFolder.Text = outputFolder;
+            activity.OutputFolder = outputFolderString;
+
         }
 
-        private async void OnClickGetMapCoordinateButton(object sender, RoutedEventArgs e) {
-            // reset gui txt
-            ResetGuiTxt();
+        private async void OnClickCallApiButton(object sender, RoutedEventArgs e)
+        {
+            ResetUIMessages();
 
-            // check map api key
-            var givenMapApiKey = _TextBoxMapApiKey.Text;
-            if (String.IsNullOrEmpty(givenMapApiKey)) {
-
-                var dialogResult = MessageBox.Show(caption: "Google Map API Key",
-                                                   messageBoxText: "You must provide Google Map API Key.",
-                                                   button: MessageBoxButton.OK
-                                              );
+            // check map api key is provided
+            if (String.IsNullOrEmpty(activity.MapApiKey))
+            {
+                ShowMessage("Please provide Google Map API Key");
                 return;
-
-            } else {
-                mapApiKey = givenMapApiKey;
             }
 
-            // check file exists
-            if (File.Exists(selectedFileName) == false) {
+            // check file exists & not locked
+            if (!File.Exists(activity.SelectedFile) || fileUtil.IsFileLocked(activity.SelectedFile))
+            {
+                if (!File.Exists(activity.SelectedFile))
+                {
+                    ShowMessage("File does not exist, please select again!");
+                }
+                else
+                {
+                    ShowMessage("File is locked, please close it & try again!");
+                }
 
-                // file does not exist
-                UpdateStatus("File does not exist, please select again!");
-
-                DisableGetLatLongBtn();
+                DisableCallApiButton();
                 return;
+            }
 
-            } else {
+            DisableCallApiButton();
+            EnableStopApiButton();
 
-                // check that file is not locked (used by other programs i.e. Excel)
-                if (fileUtil.IsFileLocked(selectedFileName)) {
+            // prepare data lists
+            var isDataReady = await CreateOutputDataListAsync(this, activity.SelectedFile);
 
-                    // file is locked
-                    UpdateStatus("File is locked, please close it & try again!");
+            if (!cancellationTokenSource.IsCancellationRequested)
+            {
 
-                    DisableGetLatLongBtn();
+                if (isApiKeyOrQueryLimitException)
+                {
+
+                    isApiKeyOrQueryLimitException = false;
+
+                    var dialogResult = MessageBox.Show(caption: "Exception!",
+                                                       messageBoxText: "Wrong map API key or query limit exceeded!",
+                                                       button: MessageBoxButton.OK
+                                                  );
+                    EnableCallApiButton();
+                    DisableStopApiButton();
+
                     return;
 
-                } else {
+                }
+                else
+                {
 
-                    DisableGetLatLongBtn();
-                    EnableStopApiCallBtn();
+                    // export data to csv
+                    ExportDataToCsv(isDataReady);
+                }
 
-                    // prepare data lists
-                    var isDataReady = await CreateOutputDataListAsync(this, selectedFileName);
+            }
+            else
+            {
 
-                    if (!cancellationTokenSource.IsCancellationRequested) {
+                var dialogResult = MessageBox.Show(caption: "API call cancelled",
+                                                   messageBoxText: "Would you like to write data to csv?",
+                                                   button: MessageBoxButton.YesNo
+                                              );
 
-                        if (isApiKeyOrQueryLimitException) {
+                if (dialogResult == MessageBoxResult.Yes)
+                {
 
-                            isApiKeyOrQueryLimitException = false;
+                    ExportDataToCsv(true);
 
-                            var dialogResult = MessageBox.Show(caption: "Exception!",
-                                                               messageBoxText: "Wrong map API key or query limit exceeded!",
-                                                               button: MessageBoxButton.OK
-                                                          );
-                            EnableGetLatLongBtn();
-                            DisableStopApiCallBtn();
+                }
+                else if (dialogResult == MessageBoxResult.No)
+                {
 
-                            return;
+                    ResetUIMessages();
+                    ShowMessage("API call cancelled!");
 
-                        } else {
+                    ResetDataList();
 
-                            // export data to csv
-                            ExportDataToCsv(isDataReady);
-                        }
-
-                    } else {
-
-                        var dialogResult = MessageBox.Show(caption: "API call cancelled",
-                                                           messageBoxText: "Would you like to write data to csv?",
-                                                           button: MessageBoxButton.YesNo
-                                                      );
-
-                        if (dialogResult == MessageBoxResult.Yes) {
-
-                            ExportDataToCsv(true);
-
-                        } else if (dialogResult == MessageBoxResult.No) {
-
-                            ResetGuiTxt();
-                            UpdateStatus("API call cancelled!");
-
-                            ResetDataList();
-
-                            EnableGetLatLongBtn();
-                            DisableStopApiCallBtn();
-                        }
-                    }
+                    EnableCallApiButton();
+                    DisableStopApiButton();
                 }
             }
         }
 
-        private void OnClickStopApiCallButton(object sender, RoutedEventArgs e) {
+        private void OnClickStopApiButton(object sender, RoutedEventArgs e)
+        {
             cancellationTokenSource?.Cancel();
         }
 
-        private async Task<bool> CreateOutputDataListAsync(MainWindow gui, string csvFile) {
+        private async Task<bool> CreateOutputDataListAsync(MainWindow gui, string csvFile)
+        {
 
             profilesWithCoordinate = new List<CompanyProfile>();
             profilesWithMissingAddress = new List<CompanyProfile>();
 
             using (cancellationTokenSource = new CancellationTokenSource())
-            using (CsvReader csvReader = new CsvReader(new StreamReader(csvFile, Encoding.UTF8))) {
+            using (CsvReader csvReader = new CsvReader(new StreamReader(csvFile, Encoding.UTF8)))
+            {
 
                 var apiCallCancelTonek = cancellationTokenSource.Token;
 
@@ -222,32 +211,38 @@ namespace JushoLatLong {
                 csvReader.Configuration.HasHeaderRecord = false;      // can not map Japanese character to english property name
                 csvReader.Configuration.MissingFieldFound = null;     // some field can be missing
 
-                await Task.Run(async () => {
+                await Task.Run(async () =>
+                {
 
                     var rowCounter = 0;
                     var successCounter = 0;
                     var errorCounter = 0;
 
-                    var locationService = new GoogleLocationService(mapApiKey);
+                    var locationService = new GoogleLocationService(activity.MapApiKey);
                     MapPoint mapPoint = null;
 
                     csvReader.Read();             // 1st line == header
 
-                    while (csvReader.Read()) {
-                        if (apiCallCancelTonek.IsCancellationRequested) {
+                    while (csvReader.Read())
+                    {
+                        if (apiCallCancelTonek.IsCancellationRequested)
+                        {
                             break;
                         }
-                        if (++rowCounter > 10) {
+                        if (++rowCounter > 10)
+                        {
                             break;
                         }
 
                         var profile = csvReader.GetRecord<CompanyProfile>();
-                        var address = String.IsNullOrEmpty(profile.Address) ? nonceAddress : profile.Address;
+                        var address = String.IsNullOrEmpty(profile.Address) ? "UDFGUWEF78R7YT 8924512" : profile.Address;
 
-                        try {
+                        try
+                        {
 
                             mapPoint = locationService.GetLatLongFromAddress(address);
-                            if (mapPoint != null && mapPoint.Latitude != 0.0 && mapPoint.Longitude != 0.0) {
+                            if (mapPoint != null && mapPoint.Latitude != 0.0 && mapPoint.Longitude != 0.0)
+                            {
 
                                 profile.Latitude = mapPoint.Latitude.ToString();
                                 profile.Longitude = mapPoint.Longitude.ToString();
@@ -256,28 +251,32 @@ namespace JushoLatLong {
                                 profilesWithCoordinate.Add(profile);
 
                                 // update gui
-                                gui.UpdateStatus($"{profile.Latitude} , {profile.Longitude} [  {address}  ]");
-                                gui.UpdateSuccess($"{++successCounter}");
+                                gui.ShowMessage($"{profile.Latitude} , {profile.Longitude} [  {address}  ]");
+                                gui.UpdateSuccessCount($"{++successCounter}");
 
-                            } else {
+                            }
+                            else
+                            {
 
                                 // add to missing address list
                                 profilesWithMissingAddress.Add(profile);
 
                                 // update gui
-                                gui.UpdateStatus("Not found");
-                                gui.UpdateError($"{++errorCounter}");
+                                gui.ShowMessage("Not found");
+                                gui.UpdateErrorCount($"{++errorCounter}");
                             }
 
                             //Thread.Sleep(1000);
                             await Task.Delay(100);
 
-                        } catch (WebException ex) {
+                        }
+                        catch (WebException ex)
+                        {
 
                             isApiKeyOrQueryLimitException = true;
 
                             // update gui
-                            UpdateStatus($"[ ERROR: {ex.Message} ]");
+                            ShowMessage($"[ ERROR: {ex.Message} ]");
 
                             break;
                         }
@@ -288,51 +287,62 @@ namespace JushoLatLong {
             }
         }
 
-        private async void ExportDataToCsv(bool isDataReady) {
+        private async void ExportDataToCsv(bool isDataReady)
+        {
 
-            if (isDataReady) {
-                DisableApiCallLatLongBtns();
+            if (isDataReady)
+            {
+                DisableAllButtons();
 
                 // write data to csv file
-                UpdateStatus("Writing csv  . . .    . . .");
+                ShowMessage("Writing csv  . . .    . . .");
                 await Task.Delay(1500);
 
-                var isWritingDone = await WriteDataToCsvAsync(outputFolder);
+                var isWritingDone = await WriteDataToCsvAsync(activity.OutputFolder);
 
-                if (isWritingDone) {
+                if (isWritingDone)
+                {
                     //ResetGuiTxt();
-                    UpdateStatus("All done!");
-                    EnableGetLatLongBtn();
+                    ShowMessage("All done!");
+                    EnableCallApiButton();
                 }
             }
         }
 
-        private async Task<bool> WriteDataToCsvAsync(string outputFolder) {
-            var fileNameOnly = Path.GetFileNameWithoutExtension(selectedFileName);
+        private async Task<bool> WriteDataToCsvAsync(string outputFolder)
+        {
+            var fileNameOnly = Path.GetFileNameWithoutExtension(activity.SelectedFile);
             validAddressCsvFile = $"{outputFolder}\\{fileNameOnly}_ok.csv";
             missingAdressCsvFIle = $"{outputFolder}\\{fileNameOnly}_error.csv";
 
-            await Task.Run(() => {
+            await Task.Run(() =>
+            {
 
                 // valid addresses
-                if (!File.Exists(validAddressCsvFile)) {
-                    using (var fs = File.Create(validAddressCsvFile)) {
+                if (!File.Exists(validAddressCsvFile))
+                {
+                    using (var fs = File.Create(validAddressCsvFile))
+                    {
                         // auto disposal
                     }
                 }
-                using (var csvWriter = new CsvWriter(new StreamWriter(File.Open(validAddressCsvFile, FileMode.Truncate, FileAccess.ReadWrite)))) {
+                using (var csvWriter = new CsvWriter(new StreamWriter(File.Open(validAddressCsvFile, FileMode.Truncate, FileAccess.ReadWrite))))
+                {
                     csvWriter.WriteRecord<CompanyProfile>(headers);
                     csvWriter.NextRecord();
                     csvWriter.WriteRecords(profilesWithCoordinate);
                 }
 
                 // missing addresses
-                if (!File.Exists(missingAdressCsvFIle)) {
-                    using (var fs = File.Create(missingAdressCsvFIle)) {
+                if (!File.Exists(missingAdressCsvFIle))
+                {
+                    using (var fs = File.Create(missingAdressCsvFIle))
+                    {
                         // auto disposal
                     }
                 }
-                using (var csvWriter = new CsvWriter(new StreamWriter(File.Open(missingAdressCsvFIle, FileMode.Truncate, FileAccess.ReadWrite)))) {
+                using (var csvWriter = new CsvWriter(new StreamWriter(File.Open(missingAdressCsvFIle, FileMode.Truncate, FileAccess.ReadWrite))))
+                {
                     csvWriter.WriteRecord<CompanyProfile>(headers);
                     csvWriter.NextRecord();
                     csvWriter.WriteRecords(profilesWithMissingAddress);
@@ -343,107 +353,91 @@ namespace JushoLatLong {
             return true;
         }
 
-        // helper functions
-        private void SetDefaultOutputFolder() {
-            if (String.IsNullOrEmpty(selectedFileName)) {
+        #region Helper Functions
+
+        private void SetDefaultOutputFolder(string selectedFile)
+        {
+
+            // early return
+            if (String.IsNullOrEmpty(selectedFile))
+            {
+                activity.OutputFolder = "";
                 return;
             }
 
-            var selectedFileDir = Path.GetDirectoryName(selectedFileName);
-            var defaultOutputFolder = !string.IsNullOrEmpty(selectedFileDir) ? $"{selectedFileDir}\\CSV_Exported" : @"C:\CSV_Exported";
+            var outputFolderString = $"{Path.GetDirectoryName(selectedFile)}\\CSV_Exported";
+            try
+            {
 
-            try {
-                // If the folder does not exist yet, it will be created.
-                // If the folder exists already, the line will be ignored.
-                outputFolder = Directory.CreateDirectory(defaultOutputFolder).FullName;
-
+                var defaulOutputFolder = Directory.CreateDirectory(outputFolderString).FullName;
                 //throw new UnauthorizedAccessException();
-                _TextBoxOutputFolder.Text = outputFolder;
 
-            } catch (Exception ex) {
+                activity.OutputFolder = defaulOutputFolder;
+
+            }
+            catch (Exception ex)
+            {
                 MessageBox.Show(caption: "Default Output Folder Error",
-                                                   messageBoxText: $"Could not create defualt output folder \"{defaultOutputFolder}\" [ Error: {ex.Message} ]. Please browse and select output folder before calling API.",
-                                                   button: MessageBoxButton.OK
-                                              );
+                                 messageBoxText: $"Could not create defualt output folder \"{outputFolderString}\" [ Error: {ex.Message} ].\nPlease browse and select output folder before calling API.",
+                                 button: MessageBoxButton.OK
+                               );
             }
         }
 
-        private void UpdateStatus(string text) {
-            //safe call
-            Dispatcher.Invoke(() => {
-                uiInfo.StatusMessage = text;
-            });
+        private void ShowMessage(string statusMessage)
+        {
+            activity.StatusMessage = statusMessage;
         }
 
-        private void UpdateSuccess(string text) {
-            //safe call
-            Dispatcher.Invoke(() => {
-                _TextBoxSuccessCount.Text = text;
-            });
+        private void UpdateSuccessCount(string successCount)
+        {
+            activity.SuccessCount = successCount;
         }
 
-        private void UpdateError(string text) {
-            //safe call
-            Dispatcher.Invoke(() => {
-                _TextBoxErrorCount.Text = text;
-            });
+        private void UpdateErrorCount(string errorCount)
+        {
+            activity.ErrorCount = errorCount;
         }
 
-        private void ResetGuiTxt() {
-            UpdateStatus("");
-            UpdateSuccess("0");
-            UpdateError("0");
+        private void ResetUIMessages()
+        {
+            ShowMessage("");
+            UpdateSuccessCount("0");
+            UpdateErrorCount("0");
         }
 
-        private void ResetDataList() {
+        private void ResetDataList()
+        {
             profilesWithCoordinate = null;
             profilesWithMissingAddress = null;
         }
 
-        private void EnableGetLatLongBtn() {
-            _ButtonGetMapCoordinate.IsEnabled = true;
+        private void EnableCallApiButton()
+        {
+            activity.IsEnabledCallApiButton = true;
         }
 
-        private void DisableGetLatLongBtn() {
-            _ButtonGetMapCoordinate.IsEnabled = false;
+        private void DisableCallApiButton()
+        {
+            activity.IsEnabledCallApiButton = false;
         }
 
-        private void DisableStopApiCallBtn() {
-            _ButtonStopApiCall.IsEnabled = false;
+        private void EnableStopApiButton()
+        {
+            activity.IsEnabledStopApiButton = true;
         }
 
-        private void EnableStopApiCallBtn() {
-            _ButtonStopApiCall.IsEnabled = true;
+        private void DisableStopApiButton()
+        {
+            activity.IsEnabledStopApiButton = false;
         }
 
-        private void DisableApiCallLatLongBtns() {
-            DisableGetLatLongBtn();
-            DisableStopApiCallBtn();
+        private void DisableAllButtons()
+        {
+            DisableCallApiButton();
+            DisableStopApiButton();
         }
 
-        private void Dlog(string tag, string msg) {
-            Debug.WriteLine($"Logging from: {tag} => {msg}");
-        }
-
-        private void OnChangeFileName(object sender, System.Windows.Controls.TextChangedEventArgs e) {
-
-            // do not listen if file browser launched
-            if (isFileBrowserLaunched) {
-                isFileBrowserLaunched = false;
-                return;
-            }
-
-            var strFileName = (sender as TextBox)?.Text;
-
-            if (File.Exists(strFileName)) {
-                selectedFileName = strFileName;
-                UpdateStatus("");
-                EnableGetLatLongBtn();
-            } else {
-                UpdateStatus("File does not exist! Please select valid file");
-                DisableGetLatLongBtn();
-            }
-        }
-
+        #endregion
     }
 }

@@ -8,7 +8,7 @@
         WindowStyle="ThreeDBorderWindow"
         Title="Jusho Latitude Longitude" Height="500" Width="600"
         Icon="pack://application:,,,/Icon/icon_uninstall.ico">
-    
+
 
     <Window.Resources>
         <!-- One style for each *type* of control on the window -->
@@ -23,82 +23,92 @@
         </Style>
     </Window.Resources>
 
-    
-    <Border Padding="20 0 20 20">
-        
+
+    <Border Padding="20 0 20 20" >
+
         <StackPanel Orientation="Vertical">
-            
-            <!-- csv file -->
-            <StackPanel Orientation="Vertical" Margin="0 0 0 10">
-                <TextBlock Text="CSV File" Margin="0 0 0 5"/>
-                <Grid>
+
+            <StackPanel Orientation="Vertical">
+
+                <!-- csv file -->
+                <StackPanel Orientation="Vertical" Margin="0 0 0 10" >
+                    <TextBlock Text="CSV File" Margin="0 0 0 5"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <TextBox Text="{Binding SelectedFile}" x:Name="_TextBoxFileName" Grid.Row="0" Grid.Column="0"/>
+                        <Button x:Name="_ButtonBrowseFile"  Margin="5 0 0 0" Content="Browse" Grid.Row="0" Grid.Column="1" Click="OnClickBrowseFileButton"/>
+                    </Grid>
+                </StackPanel>
+
+                <!-- output folder -->
+                <StackPanel Orientation="Vertical" Margin="0 0 0 10">
+                    <TextBlock Text="Output Folder" Margin="0 0 0 5"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBox Text="{Binding OutputFolder}" x:Name="_TextBoxOutputFolder" Grid.Row="0" Grid.Column="0"></TextBox>
+                        <Button x:Name="_ButtonBrowseOutputFolder" Margin="5 0 0 0" Content="Browse" Grid.Row="0" Grid.Column="1" Click="OnClickBrowseFolderButton"></Button>
+                    </Grid>
+                </StackPanel>
+
+                <!-- map api key -->
+                <StackPanel Orientation="Vertical" Margin="0 0 0 30">
+                    <TextBlock Text="Google Map API Key" Margin="0 0 0 5"/>
+                    <TextBox Text="{Binding MapApiKey}" x:Name="_TextBoxMapApiKey"></TextBox>
+                </StackPanel>
+
+                <!-- buttons -->
+                <Grid Margin="0 0 0 30">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="3*" />
-                        <ColumnDefinition Width="1*" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-
-                    <TextBox Text="{Binding SelectedFile}" x:Name="_TextBoxFileName" Grid.Row="0" Grid.Column="0"></TextBox>
-                    <Button x:Name="_ButtonBrowseFile"  Margin="5 0 0 0" Content="Browse" Grid.Row="0" Grid.Column="1" Click="OnClickBrowseFileButton"></Button>
+                    <Button IsEnabled="{Binding IsEnabledCallApiButton}" x:Name="_ButtonGetMapCoordinate" Margin="0 0 5 0" Content="Get Latitude, Longitude ( 「 緯度、経度 」 を 取得  )" Grid.Row="0" Grid.Column="0" Click="OnClickCallApiButton" />
+                    <Button IsEnabled="{Binding IsEnabledStopApiButton}" x:Name="_ButtonStopApiCall" Content="Stop API Call" Grid.Row="0" Grid.Column="1" Click="OnClickStopApiButton" />
                 </Grid>
+                
             </StackPanel>
-            
-            <!-- output folder -->
-            <StackPanel Orientation="Vertical" Margin="0 0 0 10">
-                <TextBlock Text="Output Folder" Margin="0 0 0 5"/>
+
+            <StackPanel Orientation="Vertical" >
+
+                <!-- Status -->
+                <TextBox x:Name="_TextBoxStatus" Text="{Binding StatusMessage}"  Margin="0 0 0 20" HorizontalAlignment="Center" IsReadOnly="True" BorderThickness="0"/>
+                
                 <Grid>
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="3*" />
-                        <ColumnDefinition Width="1*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="3*" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <TextBox Text="{Binding OutputFolder}" x:Name="_TextBoxOutputFolder" Grid.Row="0" Grid.Column="0"></TextBox>
-                    <Button x:Name="_ButtonBrowseOutputFolder" Margin="5 0 0 0" Content="Browse" Grid.Row="0" Grid.Column="1" Click="OnClickBrowseFolderButton"></Button>
+                    <TextBlock HorizontalAlignment="Right" Grid.Row="0" Grid.Column="0" Text="Success:"/>
+                    <TextBox Text="{Binding SuccessCount}" x:Name="_TextBoxSuccessCount" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
+                    <TextBlock HorizontalAlignment="Right" Grid.Row="0" Grid.Column="2" Text="Error:"/>
+                    <TextBox Text="{Binding ErrorCount}" x:Name="_TextBoxErrorCount" Grid.Row="0" Grid.Column="3" HorizontalAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
                 </Grid>
+                
             </StackPanel>
-
-            <!-- map api key -->
-            <StackPanel Orientation="Vertical" Margin="0 0 0 20">
-                <TextBlock Text="Google Map API Key" Margin="0 0 0 5"/>
-                <TextBox Text="{Binding MapApiKey}" x:Name="_TextBoxMapApiKey"></TextBox>
-            </StackPanel>
-
-            <!-- buttons -->
-            <Grid Margin="0 0 0 30">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="3*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <Button x:Name="_ButtonGetMapCoordinate" Margin="0 0 5 0" Content="Get Latitude, Longitude ( 「 緯度、経度 」 を 取得  )" Grid.Row="0" Grid.Column="0" Click="OnClickGetMapCoordinateButton" IsEnabled="False"/>
-                <Button x:Name="_ButtonStopApiCall" Content="Stop API Call" Grid.Row="0" Grid.Column="1" Click="OnClickStopApiCallButton" IsEnabled="False"/>
-            </Grid>
-
-            <!-- Status -->
-            <TextBox x:Name="_TextBoxStatus" Text="{Binding StatusMessage}"  Margin="0 0 0 20" HorizontalAlignment="Center" IsReadOnly="True" BorderThickness="0"/>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="3*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="3*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <TextBlock HorizontalAlignment="Right" Grid.Row="0" Grid.Column="0" Text="Success:"/>
-                <TextBox Text="{Binding SuccessCount}" x:Name="_TextBoxSuccessCount" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
-                <TextBlock HorizontalAlignment="Right" Grid.Row="0" Grid.Column="2" Text="Error:"/>
-                <TextBox Text="{Binding ErrorCount}" x:Name="_TextBoxErrorCount" Grid.Row="0" Grid.Column="3" HorizontalAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
-            </Grid>
 
         </StackPanel>
 
     </Border>
+
 </Window>
