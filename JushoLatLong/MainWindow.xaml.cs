@@ -230,7 +230,7 @@ namespace JushoLatLong
                                 UpdateErrorCount($"{++errorCounter}");
                             }
 
-                            await Task.Delay(100);
+                            await Task.Delay(100); // Google Map API call limit: 25 calls / sec.
                         }
                         catch (WebException ex)
                         {
