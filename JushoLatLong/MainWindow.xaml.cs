@@ -179,9 +179,9 @@ namespace JushoLatLong
             // api call related exception
             var isWebException = false;
 
-            using (var csvReader = new CsvReader(new StreamReader(activity.SelectedFile, Encoding.UTF8)))
-            using (var okCsvWriter = new CsvWriter(new StreamWriter(File.Open(validAddressCsvFile, FileMode.Truncate, FileAccess.ReadWrite))))
-            using (var errorCsvWriter = new CsvWriter(new StreamWriter(File.Open(missingAdressCsvFIle, FileMode.Truncate, FileAccess.ReadWrite))))
+            using (var csvReader = new CsvReader(new StreamReader(activity.SelectedFile, Encoding.Default)))
+            using (var okCsvWriter = new CsvWriter(new StreamWriter(File.Open(validAddressCsvFile, FileMode.Truncate, FileAccess.ReadWrite), Encoding.Default)))
+            using (var errorCsvWriter = new CsvWriter(new StreamWriter(File.Open(missingAdressCsvFIle, FileMode.Truncate, FileAccess.ReadWrite), Encoding.Default)))
             {
                 // reader configuration
                 csvReader.Configuration.Delimiter = ",";              // using "," instead of ";"
