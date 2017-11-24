@@ -86,8 +86,6 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Controller\CsvController.cs" />
-    <Compile Include="Controller\ICsvController.cs" />
     <Compile Include="Model\Domain\CompanyProfile.cs" />
     <Compile Include="Model\Domain\Coordinate.cs" />
     <Compile Include="ViewModel\ActivityViewModel.cs" />

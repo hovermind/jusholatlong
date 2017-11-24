@@ -1,4 +1,4 @@
-﻿using JushoLatLong.Controller;
+﻿
 using JushoLatLong.Model.Domain;
 using JushoLatLong.Utils;
 using System.IO;
