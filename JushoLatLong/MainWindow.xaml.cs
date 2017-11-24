@@ -214,7 +214,7 @@ namespace JushoLatLong {
             profilesWithMissingAddress = new List<CompanyProfile>();
 
             using (cancellationTokenSource = new CancellationTokenSource())
-            using (CsvReader csvReader = new CsvReader(new StreamReader(csvFile, Encoding.Default))) {
+            using (CsvReader csvReader = new CsvReader(new StreamReader(csvFile, Encoding.UTF8))) {
 
                 var apiCallCancelTonek = cancellationTokenSource.Token;
 
