@@ -12,6 +12,7 @@ namespace JushoLatLong.ViewModel
         public string OutputFolder { get; set; } = "";
         public string MapApiKey { get; set; } = "AIzaSyDEaVB3eTqPbjhVNYgyd2N8EAVDabuI_-k";
 
+        public bool IsHeaderJP { get; set; } = true;
         public int AddressColumnIndex { get; set; } = 1;
 
         public bool IsEnabledCallApiButton { get; set; } = false;

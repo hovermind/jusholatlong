@@ -12,6 +12,7 @@ using System.Threading;
 using System.Net;
 using JushoLatLong.ViewModel;
 using System.Linq;
+using System.Windows.Controls;
 
 namespace JushoLatLong
 {
@@ -193,7 +194,16 @@ namespace JushoLatLong
                     var headers = csvReader.GetRecord<dynamic>();
                     errorCsvWriter.WriteRecord(headers);
                     errorCsvWriter.NextRecord();
-
+                    if (activity.IsHeaderJP)
+                    {
+                        headers.Latitude = "緯度";
+                        headers.Longitude = "経度";
+                    }
+                    else
+                    {
+                        headers.Latitude = "Latitude";
+                        headers.Longitude = "Longitude";
+                    }
                     okCsvWriter.WriteRecord(headers);
                     okCsvWriter.NextRecord();
 
@@ -271,6 +281,22 @@ namespace JushoLatLong
         private void OnClickStopApiButton(object sender, RoutedEventArgs e)
         {
             cts?.Cancel();
+        }
+
+        private void OnCheckedJapaneseHeader(object sender, RoutedEventArgs e)
+        {
+            var radio = (RadioButton)sender;
+
+            if ((bool)radio.IsChecked) {
+                activity.IsHeaderJP = true;
+                ShowMessage(@"'緯度' & '経度' will be appended to header");
+            }
+            else
+            {
+                activity.IsHeaderJP = false;
+                ShowMessage(@"'Latitude' & 'Longitude' will be appended to header");
+            }
+
         }
 
         #region Helper Functions
