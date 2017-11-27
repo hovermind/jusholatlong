@@ -11,6 +11,7 @@ using GoogleMaps.LocationServices;
 using System.Threading;
 using System.Net;
 using JushoLatLong.ViewModel;
+using System.Linq;
 
 namespace JushoLatLong
 {
@@ -25,8 +26,6 @@ namespace JushoLatLong
 
         private IFileUtil fileUtil = null;
 
-        CompanyProfile headers = null;
-
         public MainWindow()
         {
             InitializeComponent();
@@ -36,21 +35,6 @@ namespace JushoLatLong
             DataContext = activity;
 
             fileUtil = new FileUtil();
-
-            headers = new CompanyProfile
-            {
-                CompanyCode = "会社コード",
-                PrefecturesName = "都道府県名",
-                CityName = "市区町村名",
-                Address = "以下住所",
-                Remarks = "備考",
-                Registrant = "登録者",
-                RegistrationDate = "登録日",
-                Apo = "APO",
-                RecordNumber = "レコード番号",
-                Latitude = "緯度",
-                Longitude = "経度"
-            };
         }
 
         private void OnClickBrowseFileButton(object sender, RoutedEventArgs e)
@@ -181,9 +165,18 @@ namespace JushoLatLong
             using (var errorCsvWriter = new CsvWriter(new StreamWriter(File.Open(missingAdressCsvFIle, FileMode.Truncate, FileAccess.ReadWrite), Encoding.Default)))
             {
                 // reader configuration
+                csvReader.Configuration.Encoding = Encoding.Default;
                 csvReader.Configuration.Delimiter = ",";              // using "," instead of ";"
                 csvReader.Configuration.HasHeaderRecord = false;      // can not map Japanese character to english property name
                 csvReader.Configuration.MissingFieldFound = null;     // some field can be missing
+
+                okCsvWriter.Configuration.QuoteAllFields = true;
+                okCsvWriter.Configuration.Delimiter = ",";
+                okCsvWriter.Configuration.HasHeaderRecord = false;      // for non-english header (first record instead of header record)
+
+                errorCsvWriter.Configuration.QuoteAllFields = true;
+                errorCsvWriter.Configuration.Delimiter = ",";
+                errorCsvWriter.Configuration.HasHeaderRecord = false;   // for non-english header (first record instead of header record)
 
                 await Task.Run(async () =>
                 {
@@ -192,23 +185,25 @@ namespace JushoLatLong
                     var successCounter = 0;
                     var errorCounter = 0;
 
-                    // write headers
-                    okCsvWriter.WriteRecord(headers);
-                    okCsvWriter.NextRecord();
-                    errorCsvWriter.WriteRecord(headers);
-                    errorCsvWriter.NextRecord();
-
                     var locationService = new GoogleLocationService(activity.MapApiKey);
                     MapPoint mapPoint = null;
 
-                    // start reading
-                    csvReader.Read();   // skip header
+                    // write headers
+                    csvReader.Read();
+                    var headers = csvReader.GetRecord<dynamic>();
+                    errorCsvWriter.WriteRecord(headers);
+                    errorCsvWriter.NextRecord();
+
+                    okCsvWriter.WriteRecord(headers);
+                    okCsvWriter.NextRecord();
+
+
                     while (csvReader.Read())
                     {
                         if (cts.Token.IsCancellationRequested) break;
 
-                        var profile = csvReader.GetRecord<CompanyProfile>();
-                        var address = profile?.Address;
+                        var profile = csvReader.GetRecord<dynamic>();               // entire row
+                        var address = csvReader[activity.AddressColumnIndex - 1];   // address column
 
                         // in case address is null or empty
                         if (String.IsNullOrEmpty(address))
@@ -226,6 +221,7 @@ namespace JushoLatLong
                         try
                         {
                             mapPoint = locationService.GetLatLongFromAddress(address);
+
                             if (mapPoint != null && mapPoint.Latitude != 0.0 && mapPoint.Longitude != 0.0)
                             {
                                 profile.Latitude = mapPoint.Latitude.ToString();

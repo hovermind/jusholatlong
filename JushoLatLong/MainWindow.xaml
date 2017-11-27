@@ -63,11 +63,26 @@
                     </Grid>
                 </StackPanel>
 
-                <!-- map api key -->
-                <StackPanel Orientation="Vertical" Margin="0 0 0 30">
-                    <TextBlock Text="Google Map API Key" Margin="0 0 0 5"/>
-                    <TextBox Text="{Binding MapApiKey}" x:Name="_TextBoxMapApiKey"></TextBox>
-                </StackPanel>
+                <!-- map api key & address column index-->
+                <Grid Margin="0 0 0 30">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    
+                    <StackPanel Orientation="Vertical" Grid.Column="0" Grid.Row="0">
+                        <TextBlock Text="Google Map API Key" Margin="0 0 0 5"/>
+                        <TextBox Text="{Binding MapApiKey}" x:Name="_TextBoxMapApiKey"></TextBox>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Vertical" Margin="5 0 0 0" Grid.Column="1" Grid.Row="0">
+                        <TextBlock Text="Address Column Index" Margin="0 0 0 5"/>
+                        <TextBox Text="{Binding AddressColumnIndex}" x:Name="_TextBoxAddressColumnIndex"></TextBox>
+                    </StackPanel>
+                </Grid>
 
                 <!-- buttons -->
                 <Grid Margin="0 0 0 30">
@@ -78,8 +93,8 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <Button IsEnabled="{Binding IsEnabledCallApiButton}" x:Name="_ButtonGetMapCoordinate" Margin="0 0 5 0" Content="Get Latitude, Longitude (「 緯度、経度 」 を 取得する)" Grid.Row="0" Grid.Column="0" Click="OnClickCallApiButton" />
-                    <Button IsEnabled="{Binding IsEnabledStopApiButton}" x:Name="_ButtonStopApiCall" Content="Stop API Call" Grid.Row="0" Grid.Column="1" Click="OnClickStopApiButton" />
+                    <Button IsEnabled="{Binding IsEnabledCallApiButton}" x:Name="_ButtonGetMapCoordinate" Content="Get Latitude, Longitude (「 緯度、経度 」 を 取得する)" Grid.Row="0" Grid.Column="0" Click="OnClickCallApiButton" />
+                    <Button IsEnabled="{Binding IsEnabledStopApiButton}" x:Name="_ButtonStopApiCall" Content="Stop API Call" Grid.Row="0" Grid.Column="1" Click="OnClickStopApiButton" Margin="5 0 0 0"/>
                 </Grid>
                 
             </StackPanel>

@@ -54,6 +54,9 @@
     <Reference Include="Microsoft.WindowsAPICodePack.Shell, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\WindowsAPICodePack-Shell.1.1.1\lib\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="PropertyChanged, Version=2.1.4.0, Culture=neutral, PublicKeyToken=ee3ee20bcf148ddd, processorArchitecture=MSIL">
       <HintPath>..\packages\PropertyChanged.Fody.2.1.4\lib\netstandard1.0\PropertyChanged.dll</HintPath>
       <Private>False</Private>
@@ -88,6 +91,7 @@
     </Compile>
     <Compile Include="Model\Domain\CompanyProfile.cs" />
     <Compile Include="Model\Domain\Coordinate.cs" />
+    <Compile Include="Utils\CommonUtil.cs" />
     <Compile Include="ViewModel\ActivityViewModel.cs" />
     <Compile Include="Utils\FileUtil.cs" />
     <Compile Include="Utils\IFileUtil.cs" />
