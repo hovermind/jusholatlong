@@ -10,7 +10,7 @@ namespace JushoLatLong.ViewModel
 
         public string SelectedFile { get; set; } = "";
         public string OutputFolder { get; set; } = "";
-        public string MapApiKey { get; set; } = "AIzaSyDEaVB3eTqPbjhVNYgyd2N8EAVDabuI_-k";
+        public string MapApiKey { get; set; } = "";
 
         public bool IsEnabledCallApiButton { get; set; } = false;
         public bool IsEnabledStopApiButton { get; set; } = false;

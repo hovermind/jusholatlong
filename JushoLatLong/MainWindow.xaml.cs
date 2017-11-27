@@ -176,9 +176,6 @@ namespace JushoLatLong
             cts?.Dispose();
             cts = new CancellationTokenSource();
 
-            // api call related exception
-            var isWebException = false;
-
             using (var csvReader = new CsvReader(new StreamReader(activity.SelectedFile, Encoding.Default)))
             using (var okCsvWriter = new CsvWriter(new StreamWriter(File.Open(validAddressCsvFile, FileMode.Truncate, FileAccess.ReadWrite), Encoding.Default)))
             using (var errorCsvWriter = new CsvWriter(new StreamWriter(File.Open(missingAdressCsvFIle, FileMode.Truncate, FileAccess.ReadWrite), Encoding.Default)))
@@ -255,9 +252,13 @@ namespace JushoLatLong
                         }
                         catch (WebException ex)
                         {
-                            isWebException = true;
+                            // isWebException = true;
                             // update gui
                             ShowMessage($"[ ERROR ] {ex?.Message}");
+
+                            EnableCallApiButton();
+                            DisableStopApiButton();
+
                             return;
                         }
                     }
@@ -266,10 +267,8 @@ namespace JushoLatLong
                 EnableCallApiButton();
                 DisableStopApiButton();
 
-                if (isWebException) return;
-
                 ShowMessage("All done");
-                if (cts.Token.IsCancellationRequested) ShowMessage("All done (Api call cancelled)");
+                if (cts.Token.IsCancellationRequested) ShowMessage("Api call cancelled");
             }
         }
 
