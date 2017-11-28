@@ -162,7 +162,7 @@ namespace JushoLatLong
             cts = new CancellationTokenSource();
 
             using (var csvReader = new CsvReader(new StreamReader(activity.SelectedFile, Encoding.Default)))
-            using (var okCsvWriter = new CsvWriter(new StreamWriter(File.Open(validAddressCsvFile, FileMode.Truncate, FileAccess.ReadWrite), Encoding.Default)))
+            using (var validCsvWriter = new CsvWriter(new StreamWriter(File.Open(validAddressCsvFile, FileMode.Truncate, FileAccess.ReadWrite), Encoding.Default)))
             using (var errorCsvWriter = new CsvWriter(new StreamWriter(File.Open(missingAdressCsvFIle, FileMode.Truncate, FileAccess.ReadWrite), Encoding.Default)))
             {
                 // reader configuration
@@ -171,9 +171,9 @@ namespace JushoLatLong
                 csvReader.Configuration.HasHeaderRecord = false;      // can not map Japanese character to english property name
                 csvReader.Configuration.MissingFieldFound = null;     // some field can be missing
 
-                okCsvWriter.Configuration.QuoteAllFields = true;
-                okCsvWriter.Configuration.Delimiter = ",";
-                okCsvWriter.Configuration.HasHeaderRecord = false;      // for non-english header (first record instead of header record)
+                validCsvWriter.Configuration.QuoteAllFields = true;
+                validCsvWriter.Configuration.Delimiter = ",";
+                validCsvWriter.Configuration.HasHeaderRecord = false;      // for non-english header (first record instead of header record)
 
                 errorCsvWriter.Configuration.QuoteAllFields = true;
                 errorCsvWriter.Configuration.Delimiter = ",";
@@ -204,8 +204,8 @@ namespace JushoLatLong
                         headers.Latitude = "Latitude";
                         headers.Longitude = "Longitude";
                     }
-                    okCsvWriter.WriteRecord(headers);
-                    okCsvWriter.NextRecord();
+                    validCsvWriter.WriteRecord(headers);
+                    validCsvWriter.NextRecord();
 
 
                     while (csvReader.Read())
@@ -237,8 +237,8 @@ namespace JushoLatLong
                                 profile.Latitude = mapPoint.Latitude.ToString();
                                 profile.Longitude = mapPoint.Longitude.ToString();
 
-                                okCsvWriter.WriteRecord(profile);
-                                okCsvWriter.NextRecord();
+                                validCsvWriter.WriteRecord(profile);
+                                validCsvWriter.NextRecord();
 
                                 // update gui
                                 ShowMessage($"{profile.Latitude} , {profile.Longitude} [  {address}  ]");
