@@ -93,6 +93,9 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MapApi\GeocodingService.cs" />
+    <Compile Include="Model\Api\GeocodingResponse.cs" />
+    <Compile Include="Model\Api\GeoPoint.cs" />
     <Compile Include="Model\Domain\CompanyProfile.cs" />
     <Compile Include="Model\Domain\Coordinate.cs" />
     <Compile Include="Utils\CommonUtil.cs" />
