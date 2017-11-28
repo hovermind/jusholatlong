@@ -273,8 +273,14 @@ namespace JushoLatLong
                 EnableCallApiButton();
                 DisableStopApiButton();
 
-                ShowMessage("All done");
-                if (cts.Token.IsCancellationRequested) ShowMessage("Api call cancelled");
+                if (cts.Token.IsCancellationRequested)
+                {
+                    ShowMessage("Api call cancelled");
+                }
+                else
+                {
+                    ShowMessage("All done");
+                }
             }
         }
 
@@ -287,7 +293,8 @@ namespace JushoLatLong
         {
             var radio = (RadioButton)sender;
 
-            if ((bool)radio.IsChecked) {
+            if ((bool)radio.IsChecked)
+            {
                 activity.IsHeaderJP = true;
                 ShowMessage(@"'緯度' & '経度' will be appended to header");
             }
