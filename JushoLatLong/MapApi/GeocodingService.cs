@@ -4,44 +4,43 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JushoLatLong.MapApi
 {
     public class GeocodingService
     {
-        private const string _baseUrl = "https://maps.googleapis.com/maps/api/geocode/json?";
+        private const string BaseUri = "https://maps.googleapis.com/maps/api/geocode/";
+
         private RestClient _restClient = null;
-        private RestRequest _restRequest = null;
 
-        // singleton
-        private static GeocodingService instance = null;
-        public static GeocodingService GetInstance(string mapApiKey)
+        private RestRequest Request { get; set; }
+
+        public GeocodingService(string apiKey)
         {
-            if (instance == null) instance = new GeocodingService(mapApiKey);
-            return instance;
-        }
-
-        GeocodingService(string mapApiKey)
-        {
-            _restClient = new RestClient(_baseUrl);
-            _restRequest = new RestRequest("address={address}" + $"&key={mapApiKey}", Method.POST);
-        }
-
-        public GeoPoint GetGeoPoint(string address)
-        {
-            _restRequest.AddUrlSegment("address", address);
-
-            var response = _restClient.Execute<GeocodingResponse>(_restRequest);
-            var data = response.Data;
-
-            if(data.Status == "OK")
+            _restClient = new RestClient(BaseUri)
             {
-                //var geometry = data.Results.A
+                Encoding = Encoding.UTF8,
+            };
+
+            Request = new RestRequest("json?address={address}&key=" + $"{apiKey}", Method.GET);
+        }
+
+        public async Task<GeoPoint> GetGeoPointAsync(string address)
+        {
+            
+            Request.AddUrlSegment("address", address);
+
+            var response = await _restClient.ExecuteGetTaskAsync<GeocodingResponse>(Request);
+
+            if (response.IsSuccessful && response.Data != null && response.Data.Results.Count > 0)
+            {
+                var result = response.Data.Results.ElementAt(0);
+                return new GeoPoint { Latitude = result.Geometry.Location.Lat, Longitude = result.Geometry.Location.Lng };
             }
 
-            return null;
+            return new GeoPoint();
         }
-
     }
 }

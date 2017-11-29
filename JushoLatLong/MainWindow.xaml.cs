@@ -13,6 +13,8 @@ using System.Net;
 using JushoLatLong.ViewModel;
 using System.Linq;
 using System.Windows.Controls;
+using JushoLatLong.MapApi;
+using JushoLatLong.Model.Api;
 
 namespace JushoLatLong
 {
@@ -161,12 +163,12 @@ namespace JushoLatLong
             cts?.Dispose();
             cts = new CancellationTokenSource();
 
-            using (var csvReader = new CsvReader(new StreamReader(activity.SelectedFile, Encoding.Default)))
-            using (var validCsvWriter = new CsvWriter(new StreamWriter(File.Open(validAddressCsvFile, FileMode.Truncate, FileAccess.ReadWrite), Encoding.Default)))
-            using (var errorCsvWriter = new CsvWriter(new StreamWriter(File.Open(missingAdressCsvFIle, FileMode.Truncate, FileAccess.ReadWrite), Encoding.Default)))
+            using (var csvReader = new CsvReader(new StreamReader(activity.SelectedFile, Encoding.UTF8)))
+            using (var validCsvWriter = new CsvWriter(new StreamWriter(File.Open(validAddressCsvFile, FileMode.Truncate, FileAccess.ReadWrite), Encoding.UTF8)))
+            using (var errorCsvWriter = new CsvWriter(new StreamWriter(File.Open(missingAdressCsvFIle, FileMode.Truncate, FileAccess.ReadWrite), Encoding.UTF8)))
             {
                 // reader configuration
-                csvReader.Configuration.Encoding = Encoding.Default;
+                csvReader.Configuration.Encoding = Encoding.UTF8;
                 csvReader.Configuration.Delimiter = ",";              // using "," instead of ";"
                 csvReader.Configuration.HasHeaderRecord = false;      // can not map Japanese character to english property name
                 csvReader.Configuration.MissingFieldFound = null;     // some field can be missing
@@ -186,8 +188,8 @@ namespace JushoLatLong
                     var successCounter = 0;
                     var errorCounter = 0;
 
-                    var locationService = new GoogleLocationService(activity.MapApiKey);
-                    MapPoint mapPoint = null;
+                    var apiService = new GeocodingService(activity.MapApiKey);
+                    GeoPoint mapPoint = null;
 
                     // write headers
                     csvReader.Read();
@@ -230,7 +232,7 @@ namespace JushoLatLong
 
                         try
                         {
-                            mapPoint = locationService.GetLatLongFromAddress(address);
+                            mapPoint = await apiService.GetGeoPointAsync(address);
 
                             if (mapPoint != null && mapPoint.Latitude != 0.0 && mapPoint.Longitude != 0.0)
                             {
@@ -258,8 +260,6 @@ namespace JushoLatLong
                         }
                         catch (WebException ex)
                         {
-                            // isWebException = true;
-                            // update gui
                             ShowMessage($"[ ERROR ] {ex?.Message}");
 
                             EnableCallApiButton();

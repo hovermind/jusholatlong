@@ -13,7 +13,7 @@ namespace JushoLatLong.ViewModel
         public string MapApiKey { get; set; } = "AIzaSyDEaVB3eTqPbjhVNYgyd2N8EAVDabuI_-k";
 
         public bool IsHeaderJP { get; set; } = true;
-        public int AddressColumnIndex { get; set; } = 1;
+        public int AddressColumnIndex { get; set; } = 4;
 
         public bool IsEnabledCallApiButton { get; set; } = false;
         public bool IsEnabledStopApiButton { get; set; } = false;
