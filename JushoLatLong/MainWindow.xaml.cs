@@ -206,14 +206,9 @@ namespace JushoLatLong
                 EnableCallApiButton();
                 DisableStopApiButton();
 
-                if (cts.Token.IsCancellationRequested)
-                {
-                    ShowMessage("Api call cancelled");
-                }
-                else
-                {
-                    ShowMessage("All done");
-                }
+                if (cts.Token.IsCancellationRequested) ShowMessage("Api call cancelled");
+                else ShowMessage("All done");
+
             }
         }
 
