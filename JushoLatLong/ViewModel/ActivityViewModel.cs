@@ -4,7 +4,7 @@ using System.ComponentModel;
 namespace JushoLatLong.ViewModel
 {
     [AddINotifyPropertyChangedInterface]
-    class ActivityViewModel : INotifyPropertyChanged
+    public class ActivityViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

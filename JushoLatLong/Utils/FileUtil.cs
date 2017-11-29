@@ -1,13 +1,18 @@
-﻿using Microsoft.Win32;
+﻿using JushoLatLong.ViewModel;
+using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using System;
 using System.IO;
 
 namespace JushoLatLong.Utils
 {
-    class FileUtil : IFileUtil {
-        public string GetSelectedFile(string fileType) {
+    class FileUtil : IFileUtil
+    {
+        public string GetSelectedFile(string fileType)
+        {
             // create OpenFileDialog
-            var fileDialog = new OpenFileDialog {
+            var fileDialog = new OpenFileDialog
+            {
                 Title = "Browse File",
                 // filter for file extension & default file extension
                 DefaultExt = $".{fileType}",
@@ -25,9 +30,11 @@ namespace JushoLatLong.Utils
             return "";
         }
 
-        public string GetOutputFolder() {
+        public string GetOutputFolder()
+        {
 
-            var folderDialog = new CommonOpenFileDialog {
+            var folderDialog = new CommonOpenFileDialog
+            {
                 Title = "Browse Folder",
                 IsFolderPicker = true,
                 Multiselect = false
@@ -42,19 +49,69 @@ namespace JushoLatLong.Utils
             return "";
         }
 
-        public bool IsFileLocked(string fileName) {
+        public bool IsFileLocked(string fileName)
+        {
 
-            try {
+            try
+            {
 
                 var fs = File.Open(fileName, FileMode.Open);
                 fs.Close();
 
                 return false;
 
-            } catch (IOException ex) {
+            }
+            catch (IOException ex)
+            {
 
                 return ex != null;
             }
+        }
+
+        public bool ValidateInputFile(MainWindow mainWindow, ActivityViewModel viewModel)
+        {
+            // check input csv file exists & not locked
+            if (!File.Exists(viewModel.SelectedFile) || IsFileLocked(viewModel.SelectedFile))
+            {
+                if (!File.Exists(viewModel.SelectedFile)) mainWindow.ShowMessage("File does not exist, please select again!");
+                else mainWindow.ShowMessage("File is locked, please close it & try again!");
+
+                return false;
+            }
+
+            return true;
+        }
+
+        public string PrepareFile(string suffix, MainWindow mainWindow, ActivityViewModel viewModel)
+        {
+            // ouput folder
+            if (String.IsNullOrEmpty(viewModel.OutputFolder)) mainWindow.SetDefaultOutputFolder(viewModel.SelectedFile);
+
+            var fileNameOnly = Path.GetFileNameWithoutExtension(viewModel.SelectedFile);
+            var file = $"{viewModel.OutputFolder}\\{fileNameOnly}_{suffix}";
+
+            if (!File.Exists(file))
+            {
+                // exception: while creating files
+                try
+                {
+                    File.Create(file).Dispose();
+                }
+                catch (Exception ex)
+                {
+                    mainWindow.ShowMessage($"[ ERROR ] {ex.Message}");
+                    return "";
+                }
+            }
+
+            // cehck: output file is not locked
+            if (IsFileLocked(file))
+            {
+                mainWindow.ShowMessage($"[ ERROR ] {file} is locked");
+                return "";
+            }
+
+            return file;
         }
     }
 }
