@@ -38,7 +38,7 @@ namespace JushoLatLong.MapApi
 
             var response = await _restClient.ExecuteGetTaskAsync<GeocodingResponse>(_request);
 
-            if (response.IsSuccessful && response.Data != null && response.Data.Results.Count > 0)
+            if (response != null && response.Data != null && response.Data.Results.Count > 0)
             {
                 var result = response.Data.Results.ElementAt(0);
                 return new GeoPoint { Latitude = result.Geometry.Location.Lat, Longitude = result.Geometry.Location.Lng };

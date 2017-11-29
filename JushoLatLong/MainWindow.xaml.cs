@@ -175,7 +175,7 @@ namespace JushoLatLong
 
                         try
                         {
-                            mapPoint = apiService.GetGeoPoint(address);
+                            mapPoint = await apiService.GetGeoPointAsync(address);
 
                             if (mapPoint.Latitude != 0.0 && mapPoint.Longitude != 0.0)
                             {
@@ -193,7 +193,7 @@ namespace JushoLatLong
                                 ShowError("Wrong address", ++errorCounter);
                             }
 
-                            await Task.Delay(100); // Google Map API call limit: 25 calls / sec.
+                            //await Task.Delay(50); // Google Map API call limit: 25 calls / sec.
                         }
                         catch (WebException ex)
                         {
@@ -297,8 +297,6 @@ namespace JushoLatLong
             UpdateErrorCount($"{counter}");
             ShowErrorMessage(msg);
         }
-
-
 
         public void OnExceptionOccured(string msg)
         {
