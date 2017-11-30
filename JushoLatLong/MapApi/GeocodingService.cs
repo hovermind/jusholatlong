@@ -1,13 +1,9 @@
 ﻿using JushoLatLong.Model.Api;
 using JushoLatLong.Utils;
 using RestSharp;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using static GoogleMaps.LocationServices.Constants;
 
 namespace JushoLatLong.MapApi
 {
@@ -131,6 +127,5 @@ namespace JushoLatLong.MapApi
 
             return true;
         }
-
     }
 }

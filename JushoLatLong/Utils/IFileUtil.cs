@@ -1,6 +1,4 @@
-﻿using JushoLatLong.ViewModel;
-
-namespace JushoLatLong.Utils
+﻿namespace JushoLatLong.Utils
 {
     interface IFileUtil
     {

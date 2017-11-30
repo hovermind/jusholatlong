@@ -1,17 +1,12 @@
-﻿
-using JushoLatLong.Model.Domain;
-using JushoLatLong.Utils;
+﻿using JushoLatLong.Utils;
 using System.IO;
 using System.Windows;
 using CsvHelper;
 using System.Text;
 using System.Threading.Tasks;
 using System;
-using GoogleMaps.LocationServices;
 using System.Threading;
-using System.Net;
 using JushoLatLong.ViewModel;
-using System.Linq;
 using System.Windows.Controls;
 using JushoLatLong.MapApi;
 using JushoLatLong.Model.Api;
@@ -30,8 +25,6 @@ namespace JushoLatLong
         // utils
         private IFileUtil fileUtil = null;
         private CommonUtil commonUtil = null;
-
-
 
         public MainWindow()
         {
