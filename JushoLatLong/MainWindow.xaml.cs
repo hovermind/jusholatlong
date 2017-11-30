@@ -74,36 +74,33 @@ namespace JushoLatLong
         public async void OnClickCallApiButton(object sender, RoutedEventArgs e)
         {
             ResetUIMessages();
-            DisableCallApiButton();
-            EnableStopApiButton();
+            ToggleButtonState();
 
             // validate api key
             if (!GeocodingService.IsApiKeyValid(viewModel.MapApiKey))
             {
                 ShowErrorMessage("The provided API key is invalid.");
-
-                EnableCallApiButton();
-                DisableStopApiButton();
-
+                ToggleButtonState();
                 return;
             }
 
-            if (!fileUtil.ValidateInputFile(this, viewModel))
+            // validate input file
+            if (!fileUtil.IsFileOkToRead(viewModel.SelectedFile))
             {
-                EnableCallApiButton();
-                DisableStopApiButton();
-
+                ShowErrorMessage("Input file - locked or does not exist");
+                ToggleButtonState();
                 return;
             }
 
             // prepare ouput files
-            var validAddressCsvFile = fileUtil.PrepareFile("ok.csv", this, viewModel);
-            var missingAdressCsvFIle = fileUtil.PrepareFile("error.csv", this, viewModel);
-            if (!(validAddressCsvFile != "" && missingAdressCsvFIle != ""))
+            if (String.IsNullOrEmpty(viewModel.OutputFolder)) SetDefaultOutputFolder(viewModel.SelectedFile);
+            var fileNameOnly = Path.GetFileNameWithoutExtension(viewModel.SelectedFile);
+            var okCsv = $"{viewModel.OutputFolder}\\{fileNameOnly}_ok.csv";
+            var errorCsv = $"{viewModel.OutputFolder}\\{fileNameOnly}_error.csv";
+            if (!(fileUtil.IsFileOkToWrite(okCsv) && fileUtil.IsFileOkToWrite(errorCsv)))
             {
-                EnableCallApiButton();
-                DisableStopApiButton();
-
+                ShowErrorMessage("Output files - could not create or Readonly or locked");
+                ToggleButtonState();
                 return;
             }
 
@@ -112,8 +109,8 @@ namespace JushoLatLong
             cts = new CancellationTokenSource();
 
             using (var csvReader = new CsvReader(new StreamReader(viewModel.SelectedFile, Encoding.UTF8)))
-            using (var validCsvWriter = new CsvWriter(new StreamWriter(File.Open(validAddressCsvFile, FileMode.Truncate, FileAccess.ReadWrite), Encoding.UTF8)))
-            using (var errorCsvWriter = new CsvWriter(new StreamWriter(File.Open(missingAdressCsvFIle, FileMode.Truncate, FileAccess.ReadWrite), Encoding.UTF8)))
+            using (var validCsvWriter = new CsvWriter(new StreamWriter(File.Open(okCsv, FileMode.Truncate, FileAccess.ReadWrite), Encoding.UTF8)))
+            using (var errorCsvWriter = new CsvWriter(new StreamWriter(File.Open(errorCsv, FileMode.Truncate, FileAccess.ReadWrite), Encoding.UTF8)))
             {
                 #region Csv Reader & Writer Configurations
 
@@ -218,9 +215,7 @@ namespace JushoLatLong
                     }
                 });
 
-                EnableCallApiButton();
-                DisableStopApiButton();
-
+                ToggleButtonState();
                 if (cts.Token.IsCancellationRequested) ShowMessage("Api call cancelled");
                 else ShowMessage("All done");
 
@@ -293,7 +288,7 @@ namespace JushoLatLong
 
         public void ShowErrorMessage(string msg)
         {
-            ShowMessage($"ERROR: {msg}");
+            ShowMessage($"[ ERROR ]  {msg}");
         }
 
         public void ShowSuccess(string msg, int counter)
@@ -347,6 +342,15 @@ namespace JushoLatLong
         {
             DisableCallApiButton();
             DisableStopApiButton();
+        }
+
+        public void ToggleButtonState()
+        {
+            if (viewModel.IsEnabledCallApiButton) DisableCallApiButton();
+            else EnableCallApiButton();
+
+            if (viewModel.IsEnabledStopApiButton) DisableStopApiButton();
+            else EnableStopApiButton();
         }
 
         #endregion

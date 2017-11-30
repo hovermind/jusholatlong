@@ -51,67 +51,44 @@ namespace JushoLatLong.Utils
 
         public bool IsFileLocked(string fileName)
         {
-
             try
             {
-
                 var fs = File.Open(fileName, FileMode.Open);
-                fs.Close();
-
+                fs.Dispose();
                 return false;
-
             }
-            catch (IOException ex)
+            catch (Exception ex)
             {
-
                 return ex != null;
             }
         }
 
-        public bool ValidateInputFile(MainWindow mainWindow, ActivityViewModel viewModel)
+        public bool IsFileOkToRead(string fileUriString)
         {
             // check input csv file exists & not locked
-            if (!File.Exists(viewModel.SelectedFile) || IsFileLocked(viewModel.SelectedFile))
-            {
-                if (!File.Exists(viewModel.SelectedFile)) mainWindow.ShowMessage("File does not exist, please select again!");
-                else mainWindow.ShowMessage("File is locked, please close it & try again!");
-
-                return false;
-            }
-
-            return true;
+            if (!File.Exists(fileUriString) || IsFileLocked(fileUriString)) return false;
+            else return true;
         }
 
-        public string PrepareFile(string suffix, MainWindow mainWindow, ActivityViewModel viewModel)
+        public bool IsFileOkToWrite(string fileUriString)
         {
-            // ouput folder
-            if (String.IsNullOrEmpty(viewModel.OutputFolder)) mainWindow.SetDefaultOutputFolder(viewModel.SelectedFile);
-
-            var fileNameOnly = Path.GetFileNameWithoutExtension(viewModel.SelectedFile);
-            var file = $"{viewModel.OutputFolder}\\{fileNameOnly}_{suffix}";
-
-            if (!File.Exists(file))
+            if (!File.Exists(fileUriString))
             {
                 // exception: while creating files
                 try
                 {
-                    File.Create(file).Dispose();
+                    File.Create(fileUriString).Dispose();
                 }
                 catch (Exception ex)
                 {
-                    mainWindow.ShowMessage($"[ ERROR ] {ex.Message}");
-                    return "";
+                    return false;
                 }
             }
 
             // cehck: output file is not locked
-            if (IsFileLocked(file))
-            {
-                mainWindow.ShowMessage($"[ ERROR ] {file} is locked");
-                return "";
-            }
+            if (IsFileLocked(fileUriString)) return false;
 
-            return file;
+            return true;
         }
     }
 }
