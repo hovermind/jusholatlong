@@ -65,9 +65,7 @@ namespace JushoLatLong.Utils
 
         public bool IsFileOkToRead(string fileUriString)
         {
-            // check input csv file exists & not locked
-            if (!File.Exists(fileUriString) || IsFileLocked(fileUriString)) return false;
-            else return true;
+            return !String.IsNullOrEmpty(fileUriString) && File.Exists(fileUriString) && !IsFileLocked(fileUriString);
         }
 
         public bool IsFileOkToWrite(string fileUriString)
@@ -86,9 +84,7 @@ namespace JushoLatLong.Utils
             }
 
             // cehck: output file is not locked
-            if (IsFileLocked(fileUriString)) return false;
-
-            return true;
+            return !IsFileLocked(fileUriString);
         }
     }
 }

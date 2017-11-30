@@ -15,6 +15,9 @@ namespace JushoLatLong.ViewModel
         public bool IsHeaderJP { get; set; } = true;
         public int AddressColumnIndex { get; set; } = 4;
 
+        public string OkOutputFileUri { get; set; }
+        public string ErrorOutputFileUri { get; set; }
+
         public bool IsEnabledCallApiButton { get; set; } = false;
         public bool IsEnabledStopApiButton { get; set; } = false;
 
