@@ -93,6 +93,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MapApi\GeocodingException.cs" />
+    <Compile Include="MapApi\ResponseStatus.cs" />
     <Compile Include="Utils\Constants.cs" />
     <Compile Include="MapApi\GeocodingService.cs" />
     <Compile Include="Model\Api\GeocodingResponse.cs" />

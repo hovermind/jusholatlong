@@ -77,8 +77,18 @@ namespace JushoLatLong
             DisableCallApiButton();
             EnableStopApiButton();
 
-            // validate api key & input file
-            if (!(commonUtil.ValidateApiKey(this, viewModel) && fileUtil.ValidateInputFile(this, viewModel)))
+            // validate api key
+            if (!GeocodingService.IsApiKeyValid(viewModel.MapApiKey))
+            {
+                ShowErrorMessage("The provided API key is invalid.");
+
+                EnableCallApiButton();
+                DisableStopApiButton();
+
+                return;
+            }
+
+            if (!fileUtil.ValidateInputFile(this, viewModel))
             {
                 EnableCallApiButton();
                 DisableStopApiButton();
@@ -195,7 +205,12 @@ namespace JushoLatLong
 
                             //await Task.Delay(50); // Google Map API call limit: 25 calls / sec.
                         }
-                        catch (WebException ex)
+                        catch (GeocodingException ex)
+                        {
+                            OnExceptionOccured(ex.Message);
+                            return;
+                        }
+                        catch (Exception ex)
                         {
                             OnExceptionOccured(ex.Message);
                             return;
@@ -278,7 +293,7 @@ namespace JushoLatLong
 
         public void ShowErrorMessage(string msg)
         {
-            ShowMessage($"ERROR<{msg}>");
+            ShowMessage($"ERROR: {msg}");
         }
 
         public void ShowSuccess(string msg, int counter)
