@@ -163,7 +163,7 @@ namespace JushoLatLong
 
                     while (csvReader.Read())
                     {
-                        if (cts.Token.IsCancellationRequested) break;
+                        if (cts.Token.IsCancellationRequested) return;
 
                         var profile = csvReader.GetRecord<dynamic>();                // entire row
                         var address = csvReader[ViewModel.AddressColumnIndex - 1];   // address column

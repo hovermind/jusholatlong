@@ -1,13 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace JushoLatLong.Model.Api
+﻿namespace JushoLatLong.Model.Api
 {
-    using System;
-    using System.Net;
     using System.Collections.Generic;
 
     public class GeocodingResponse
