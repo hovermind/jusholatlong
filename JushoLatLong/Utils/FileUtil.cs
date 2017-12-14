@@ -5,9 +5,9 @@ using System.IO;
 
 namespace JushoLatLong.Utils
 {
-    class FileUtil : IFileUtil
+    class FileUtil
     {
-        public string GetSelectedFile(string fileType)
+        public static string GetSelectedFile(string fileType)
         {
             // create OpenFileDialog
             var fileDialog = new OpenFileDialog
@@ -29,7 +29,7 @@ namespace JushoLatLong.Utils
             return "";
         }
 
-        public string GetOutputFolder()
+        public static string GetOutputFolder()
         {
 
             var folderDialog = new CommonOpenFileDialog
@@ -48,7 +48,7 @@ namespace JushoLatLong.Utils
             return "";
         }
 
-        public bool IsFileLocked(string fileName)
+        public static bool IsFileLocked(string fileName)
         {
             try
             {
@@ -62,12 +62,12 @@ namespace JushoLatLong.Utils
             }
         }
 
-        public bool IsFileOkToRead(string fileUriString)
+        public static bool IsFileOkToRead(string fileUriString)
         {
             return !String.IsNullOrEmpty(fileUriString) && File.Exists(fileUriString) && !IsFileLocked(fileUriString);
         }
 
-        public bool IsFileOkToWrite(string fileUriString)
+        public static bool IsFileOkToWrite(string fileUriString)
         {
             if (!File.Exists(fileUriString))
             {

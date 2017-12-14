@@ -16,15 +16,14 @@ namespace JushoLatLong
 
     public partial class MainWindow : Window
     {
-        // data context
-        private ActivityViewModel ViewModel { get; set; }
+        #region Private Variables
 
-        // api call cancellation token
+        private ActivityViewModel ViewModel { get; set; }
         private CancellationTokenSource cts = null;
 
-        // utils
-        private IFileUtil fileUtil = null;
-        private CommonUtil commonUtil = null;
+        #endregion
+
+        #region Constructor
 
         public MainWindow()
         {
@@ -32,22 +31,27 @@ namespace JushoLatLong
 
             // set data context
             DataContext = ViewModel = new ActivityViewModel();
-
-            fileUtil = new FileUtil();
-            commonUtil = new CommonUtil();
         }
 
-        public void OnClickBrowseFileButton(object sender, RoutedEventArgs e)
+        #endregion
+
+        #region UI Event Methods
+
+        private void OnClickBrowseFileButton(object sender, RoutedEventArgs e)
         {
             ResetUIMessages();
 
             // selected file (csv)
-            var fileNameString = fileUtil?.GetSelectedFile("csv");
+            var fileNameString = FileUtil.GetSelectedFile("csv");
             ViewModel.SelectedFile = fileNameString;
 
             if (!String.IsNullOrEmpty(fileNameString))
             {
-                if (String.IsNullOrEmpty(ViewModel.OutputFolder)) SetDefaultOutputFolder(fileNameString);
+                if (String.IsNullOrEmpty(ViewModel.OutputFolder))
+                {
+                    SetDefaultOutputFolder(fileNameString);
+                }
+
                 ShowMessage("");
                 EnableCallApiButton();
             }
@@ -58,15 +62,13 @@ namespace JushoLatLong
             }
         }
 
-        public void OnClickBrowseFolderButton(object sender, RoutedEventArgs e)
-        {
-            var outputFolderString = fileUtil?.GetOutputFolder();
+        private void OnClickBrowseFolderButton(object sender, RoutedEventArgs e) => ViewModel.OutputFolder = FileUtil.GetOutputFolder();
 
-            ViewModel.OutputFolder = outputFolderString;
-        }
-
-        public async void OnClickCallApiButton(object sender, RoutedEventArgs e)
+        private async void OnClickCallApiButton(object sender, RoutedEventArgs e)
         {
+
+            #region Init & Validation
+
             ResetUIMessages();
             ToggleButtonState();
 
@@ -79,36 +81,46 @@ namespace JushoLatLong
             }
 
             // validate input file
-            if (!fileUtil.IsFileOkToRead(ViewModel.SelectedFile))
+            if (!FileUtil.IsFileOkToRead(ViewModel.SelectedFile))
             {
-                ShowErrorMessage("Input file - locked or does not exist");
+                ShowErrorMessage("Input file is locked or does not exist");
                 ToggleButtonState();
                 return;
             }
 
             // prepare ouput files
-            try { PrepareOutputFiles(); }
+            try
+            {
+                PrepareOutputFiles();
+            }
             catch (Exception ex)
             {
                 ShowErrorMessage($"{ex.Message}");
                 ToggleButtonState();
                 return;
             }
-            if (!fileUtil.IsFileOkToWrite(ViewModel.OkOutputFileUri) || !fileUtil.IsFileOkToWrite(ViewModel.ErrorOutputFileUri))
+            if (!FileUtil.IsFileOkToWrite(ViewModel.OkOutputFileUri) || !FileUtil.IsFileOkToWrite(ViewModel.ErrorOutputFileUri))
             {
-                ShowErrorMessage("Output files - could not create or readonly or locked");
+                ShowErrorMessage("could not create output files or readonly or locked");
                 ToggleButtonState();
                 return;
             }
+
+            #endregion
+
+            #region Cancellation Token
 
             // cancellation TokenSource
             cts?.Dispose();
             cts = new CancellationTokenSource();
 
+            #endregion
+
             using (var csvReader = new CsvReader(new StreamReader(ViewModel.SelectedFile, Encoding.UTF8)))
             using (var validCsvWriter = new CsvWriter(new StreamWriter(File.Open(ViewModel.OkOutputFileUri, FileMode.Truncate, FileAccess.ReadWrite), Encoding.UTF8)))
             using (var errorCsvWriter = new CsvWriter(new StreamWriter(File.Open(ViewModel.ErrorOutputFileUri, FileMode.Truncate, FileAccess.ReadWrite), Encoding.UTF8)))
             {
+
                 #region Csv Reader & Writer Configurations
 
                 // reader configuration
@@ -163,12 +175,16 @@ namespace JushoLatLong
 
                     while (csvReader.Read())
                     {
-                        if (cts.Token.IsCancellationRequested) return;
+
+                        if (cts.Token.IsCancellationRequested)
+                        {
+                            return; // better than break
+                        }
 
                         var profile = csvReader.GetRecord<dynamic>();                // entire row
                         var address = csvReader[ViewModel.AddressColumnIndex - 1];   // address column
 
-                        // address is null or empty
+                        // if address is null or empty
                         if (String.IsNullOrEmpty(address))
                         {
                             errorCsvWriter.WriteRecord(profile);
@@ -183,6 +199,7 @@ namespace JushoLatLong
 
                             if (mapPoint.Latitude != 0.0 && mapPoint.Longitude != 0.0)
                             {
+                                // Properties can be added to Expando object dynamically
                                 profile.Latitude = mapPoint.Latitude.ToString();
                                 profile.Longitude = mapPoint.Longitude.ToString();
 
@@ -209,32 +226,37 @@ namespace JushoLatLong
                 });
 
                 ToggleButtonState();
-                if (cts.Token.IsCancellationRequested) ShowMessage("Api call cancelled");
-                else ShowMessage("All done");
+                if (cts.Token.IsCancellationRequested)
+                {
+                    ShowMessage("Api call cancelled");
+                }
+                else
+                {
+                    ShowMessage("All done");
+                } 
             }
         }
 
-        public void OnClickStopApiButton(object sender, RoutedEventArgs e)
-        {
-            cts?.Cancel();
-        }
+        private void OnClickStopApiButton(object sender, RoutedEventArgs e) => cts?.Cancel();
 
-        public void OnCheckedJapaneseHeader(object sender, RoutedEventArgs e)
+        private void OnCheckedJapaneseHeader(object sender, RoutedEventArgs e)
         {
             var radio = (RadioButton)sender;
 
             if ((bool)radio.IsChecked)
             {
                 ViewModel.IsHeaderJP = true;
-                ShowMessage(@"'緯度' & '経度' will be appended to header");
+                //ShowMessage(@"'緯度' & '経度' will be appended to header");
             }
             else
             {
                 ViewModel.IsHeaderJP = false;
-                ShowMessage(@"'Latitude' & 'Longitude' will be appended to header");
+                //ShowMessage(@"'Latitude' & 'Longitude' will be appended to header");
             }
 
         }
+
+        #endregion
 
         #region Helper Functions
 

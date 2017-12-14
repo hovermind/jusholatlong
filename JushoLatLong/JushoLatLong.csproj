@@ -104,7 +104,6 @@
     <Compile Include="Utils\CommonUtil.cs" />
     <Compile Include="ViewModels\ActivityViewModel.cs" />
     <Compile Include="Utils\FileUtil.cs" />
-    <Compile Include="Utils\IFileUtil.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
