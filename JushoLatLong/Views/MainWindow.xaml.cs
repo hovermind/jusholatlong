@@ -294,25 +294,13 @@ namespace JushoLatLong
             ViewModel.ErrorOutputFileUri = $"{ViewModel.OutputFolder}\\{fileNameOnly}_error.csv";
         }
 
-        public void ShowMessage(string statusMessage)
-        {
-            ViewModel.StatusMessage = statusMessage;
-        }
+        public void ShowMessage(string statusMessage) => ViewModel.StatusMessage = statusMessage;
 
-        public void UpdateSuccessCount(string successCount)
-        {
-            ViewModel.SuccessCount = successCount;
-        }
+        public void UpdateSuccessCount(string successCount) => ViewModel.SuccessCount = successCount;
+ 
+        public void UpdateErrorCount(string errorCount) => ViewModel.ErrorCount = errorCount;
 
-        public void UpdateErrorCount(string errorCount)
-        {
-            ViewModel.ErrorCount = errorCount;
-        }
-
-        public void ShowErrorMessage(string msg)
-        {
-            ShowMessage($"[ ERROR ]  {msg}");
-        }
+        public void ShowErrorMessage(string msg) => ShowMessage($"[ ERROR ]  {msg}");
 
         public void ShowSuccess(string msg, int counter)
         {
@@ -333,25 +321,13 @@ namespace JushoLatLong
             UpdateErrorCount("0");
         }
 
-        public void EnableCallApiButton()
-        {
-            ViewModel.IsEnabledCallApiButton = true;
-        }
+        public void EnableCallApiButton() => ViewModel.IsEnabledCallApiButton = true;
 
-        public void DisableCallApiButton()
-        {
-            ViewModel.IsEnabledCallApiButton = false;
-        }
+        public void DisableCallApiButton() => ViewModel.IsEnabledCallApiButton = false;
 
-        public void EnableStopApiButton()
-        {
-            ViewModel.IsEnabledStopApiButton = true;
-        }
+        public void EnableStopApiButton() => ViewModel.IsEnabledStopApiButton = true;
 
-        public void DisableStopApiButton()
-        {
-            ViewModel.IsEnabledStopApiButton = false;
-        }
+        public void DisableStopApiButton() => ViewModel.IsEnabledStopApiButton = false;
 
         public void DisableAllButtons()
         {
