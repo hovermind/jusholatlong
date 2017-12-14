@@ -97,12 +97,12 @@
     <Compile Include="MapApi\ResponseStatus.cs" />
     <Compile Include="Utils\Constants.cs" />
     <Compile Include="MapApi\GeocodingService.cs" />
-    <Compile Include="Model\Api\GeocodingResponse.cs" />
-    <Compile Include="Model\Api\GeoPoint.cs" />
-    <Compile Include="Model\Domain\CompanyProfile.cs" />
-    <Compile Include="Model\Domain\Coordinate.cs" />
+    <Compile Include="Models\Api\GeocodingResponse.cs" />
+    <Compile Include="Models\Api\GeoPoint.cs" />
+    <Compile Include="Models\Domain\CompanyProfile.cs" />
+    <Compile Include="Models\Domain\Coordinate.cs" />
     <Compile Include="Utils\CommonUtil.cs" />
-    <Compile Include="ViewModel\ActivityViewModel.cs" />
+    <Compile Include="ViewModels\ActivityViewModel.cs" />
     <Compile Include="Utils\FileUtil.cs" />
     <Compile Include="Utils\IFileUtil.cs" />
     <Compile Include="MainWindow.xaml.cs">
@@ -137,7 +137,10 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Models\POCO\" />
+    <Folder Include="Views\" />
+  </ItemGroup>
   <ItemGroup>
     <Resource Include="GoogleMaps.LocationServices.readme.txt" />
   </ItemGroup>
