@@ -1,15 +1,7 @@
-﻿using GoogleMaps.LocationServices;
-using JushoLatLong.ViewModel;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace JushoLatLong.Utils
-{
+namespace JushoLatLong.Utils {
     public class CommonUtil
     {
         public List<string> GetPropertyValues(dynamic expando)

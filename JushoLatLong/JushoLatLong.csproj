@@ -136,9 +136,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Models\POCO\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Resource Include="GoogleMaps.LocationServices.readme.txt" />
   </ItemGroup>
